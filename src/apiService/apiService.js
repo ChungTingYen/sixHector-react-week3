@@ -1,4 +1,4 @@
-import { adminInstance } from "../apiconfig";
+import { adminInstance } from "./apiconfig";
 
 export const  axiosGetProductData = async(path)=>{
   const response = await adminInstance.get(path);

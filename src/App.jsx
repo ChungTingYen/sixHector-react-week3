@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import  { adminInstance } from "./apiconfig";
+import  { adminInstance } from "./apiService/apiconfig";
 import * as apiService from "./apiService/apiService";
 
 function App() {
