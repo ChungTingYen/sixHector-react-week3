@@ -212,28 +212,28 @@ function App() {
               </button>
               <button
                 type="button"
-                className="btn btn-secondary  me-2"
+                className="btn btn-success me-2"
                 onClick={handleAddProduct}
               >
-              增加local端最後一項產品
+              上傳內建資料最後一項產品
               </button>
               <button
                 type="button"
                 className="btn btn-success me-2"
                 onClick={handleAddAllProducts}
               >
-              增加全部local端產品
+              上傳全部內建資料產品
               </button>
               <button
                 type="button"
-                className="btn btn-secondary  me-2"
+                className="btn btn-secondary me-2"
                 onClick={handleGetProducs}
               >
               重新取得產品資料
               </button>
               <button
                 type="button"
-                className="btn btn-warning me-2"
+                className="btn btn-danger me-2"
                 onClick={handleDeleteAllProducts}
               >
               刪除全部產品
