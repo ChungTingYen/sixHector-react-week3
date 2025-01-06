@@ -2,9 +2,12 @@
 import React, { useEffect, useState, useRef } from "react";
 // import Modal from "./Modal";
 const Product = (props) => {
-  const { id, title, origin_price, price, is_enabled, onGetProduct } = props;
+  const { id, title, origin_price, price, is_enabled, onGetProduct,onDeleteProduct } = props;
   const atGetProduct = () => {
     onGetProduct(id);
+  };
+  const atDeleteProduct = () => {
+    onDeleteProduct(id);
   };
   return (
     <>
@@ -22,6 +25,15 @@ const Product = (props) => {
               onClick={atGetProduct}
             >
               查看細節
+            </button>
+          </td>
+          <td>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={atDeleteProduct}
+            >
+              刪除
             </button>
           </td>
         </tr>

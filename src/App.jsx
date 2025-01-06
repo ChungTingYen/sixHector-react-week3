@@ -1,81 +1,138 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-
+// import axios from "axios";
 import * as apiService from "./apiService/apiService";
 import { Products, ProductDetail, Modal } from "./component";
+import { productDataAtLocal } from "./productDataAtLocal";
+import { getHeadersFromCookie,getProductData } from './utlis/utlis';
 
 function App() {
+  // const initRef = useRef(false);
+  // const [detailLoading, setDetailLoading] = useState("");
   const [productData, setProductData] = useState([]);
   const [tempProduct, setTempProduct] = useState(null);
   const [account, setAccount] = useState({
     username: "",
     password: "",
   });
-  // const initRef = useRef(false);
-  // const [detailLoading, setDetailLoading] = useState("");
+  const APIPath = import.meta.env.VITE_API_PATH;
   const [isLogginged, setIsLogginged] = useState(false);
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    // console.log("account=", account);
-    try {
-      const res = await apiService.axiosPostSignin("/admin/signin", account);
-      // console.log(res);
-      alert(res.data.message);
-
-      const { token, expired } = res.data;
-      document.cookie = `hexToken=${token}; expires=${new Date(expired)}`;
-      setIsLogginged(true);
-
-      // console.log(document.cookie);
-      // axios.defaults.headers.common.Authorization = token;
-      // const resProduct = await axios.get(
-      //   `${import.meta.env.VITE_BASE_URL}/v2/api/${
-      //     import.meta.env.VITE_API_PATH
-      //   }/admin/products/all`
-      // );
-      const headers = {
-        Authorization: token,
-      };
-      const resProduct = await apiService.axiosGetProductData(
-        `/api/${import.meta.env.VITE_API_PATH}/admin/products`,
-        headers
-      );
-      // console.log(resProduct.data);
-      setProductData(resProduct.data.products);
-    } catch (error) {
-      alert(error.response.data.message);
-      console.log(error);
-    }
-  };
   const changeInput = (e) => {
     setAccount({
       ...account,
       [e.target.name]: e.target.value,
     });
   };
+ 
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await apiService.axiosPostSignin("/admin/signin", account);
+      alert(res.data.message);
+      if(res.data.success){
+        const { token, expired } = res.data;
+        document.cookie = `hexToken=${token}; expires=${new Date(expired)}`;
+        setIsLogginged(true);
+        // axios.defaults.headers.common.Authorization = token;
+        getProductData(token,null,setProductData);
+      }
+    } catch (error) {
+      alert(error.response.data.message);
+      console.log(error);
+    }
+  };
+  
   const handleCheckLogin = async () => {
     try {
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("hexToken="))
-        ?.split("=")[1];
-
-      console.log(token);
-
-      const headers = {
-        Authorization: token,
-      };
-      console.log(headers);
+      const headers = getHeadersFromCookie();
       const res = await apiService.axiosPostCheckSingin(
         "/api/user/check",
         headers
       );
-      // axios.defaults.headers.common.Authorization = token;
-      // const res = await axios.post(
-      //   `${import.meta.env.VITE_BASE_URL}/v2/api/user/check`
-      // );
-      // console.log(res);
       alert(res.data.success ? "已登入成功" : "請重新登入");
+    } catch (error) {
+      alert(error.response.data.message);
+      console.log(error);
+    }
+  };
+  const handleAddProduct = async ()=>{
+    const wrapData = { data:productDataAtLocal[productDataAtLocal.length - 1] };
+    try {
+      const headers = getHeadersFromCookie();
+      const resProduct = await apiService.axiosPostAddProduct(
+        `/api/${APIPath}/admin/product`,wrapData,
+        headers
+      );
+      alert(resProduct.data.success ? resProduct.data.message : '新增商品失敗');
+      if(resProduct.data.success){
+        getProductData(null,headers,setProductData);
+      }
+    } catch (error){
+      alert(error.response.data.message);
+      console.log(error);
+    }
+  };
+
+  const handleAddAllProducts = async()=>{
+    const headers = getHeadersFromCookie();
+    try {
+      const resProducts = await Promise.all(
+        productDataAtLocal.map(async (data) => {
+          const wrapData = { data:data };
+          return await apiService.axiosPostAddProduct(
+            `/api/${APIPath}/admin/product`,
+            wrapData ,
+            headers
+          );
+        })
+      );
+      alert('所有產品都已成功上傳');
+      // console.log('所有產品都已成功上傳：', resProducts);
+      getProductData(null,headers,setProductData);
+    } catch (error) {
+      console.error('上傳產品時發生錯誤：', error);
+      alert(error.response.data.message);
+    }
+  };
+
+  const handleLogout = async ()=>{
+    try {
+      const headers = getHeadersFromCookie();
+      const res = await apiService.axiosPostLogout('/logout',headers);
+      alert(res.data.success ? res.data.message : '登出失敗');
+      if(res.data.success){
+        setIsLogginged(false);
+        setProductData([]);
+      } 
+    } catch (error) {
+      alert(error.response.data.message);
+      console.log(error);
+    }
+  };
+  const handleDeleteAllProducts = async ()=>{
+    const headers = getHeadersFromCookie();
+    try {
+      const res = await Promise.all(
+        productData.map(async (data) => {
+          return apiService.axiosDeleteProduct(
+            `/api/${APIPath}/admin/product/${data.id}`,
+            headers
+          );
+        })
+      );
+      alert('所有產品都已成功刪除');
+      console.log('所有產品都已成功刪除：', res);
+      getProductData(null,headers,setProductData);
+    } catch (error) {
+      console.error('刪除產品時發生錯誤：', error);
+      alert(error.response.data.message);
+    }
+  };
+
+  const handleGetProducs = async ()=>{
+    try {
+      const headers = getHeadersFromCookie();
+      await getProductData(null,headers,setProductData);
+      alert("已重新取得商品資料");
     } catch (error) {
       alert(error.response.data.message);
       console.log(error);
@@ -84,7 +141,7 @@ function App() {
   // const AppModalRef = useRef(null);
   const onGetProduct = useCallback(
     (productId) => {
-      console.log("productId=", productId);
+      // console.log("productId=", productId);
       if (tempProduct?.id === productId) {
         // 當前選擇的產品與上一次相同，不進行任何操作
         // console.log("產品ID相同，不重複打開模態框");
@@ -103,6 +160,26 @@ function App() {
     },
     [tempProduct, productData]
   );
+  const onDeleteProduct = useCallback(
+    async (productId) => {
+      console.log("productId=", productId);
+      const headers = getHeadersFromCookie();
+      try {
+        const res = await apiService.axiosDeleteProduct(
+          `/api/${APIPath}/admin/product/${productId}`,
+          headers
+        );
+        alert('產品已成功刪除');
+        console.log('產品已成功刪除：', res);
+        getProductData(null,headers,setProductData);
+      } catch (error) {
+        console.error('刪除產品時發生錯誤：', error);
+        alert(error.response.data.message);
+      }
+    },[]);
+  // useEffect(()=>{
+  //   setNeedRefreshProductCard(false);
+  // },[needRefreshProductCard]);
   //測試用Modal
   // useEffect(() => {
   //   if (detailLoading && Object.keys(tempProduct).length > 0) {
@@ -123,14 +200,53 @@ function App() {
             modalSize={{ width: "200px", height: "200px" }}
             modalImgSize={{ width: "200px", height: "120px" }}
           /> */}
-          <p className="text-secondary">Logginged</p>
-          <button
-            type="button"
-            className="btn btn-warning"
-            onClick={handleCheckLogin}
-          >
-            檢查登入狀態
-          </button>
+          <div className="row mt-5 mb-5 mx-3">
+            <p className="text-secondary">Logginged</p>
+            <div className="d-flex"> 
+              <button
+                type="button"
+                className="btn btn-warning me-2"
+                onClick={handleCheckLogin}
+              >
+              檢查登入狀態
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary  me-2"
+                onClick={handleAddProduct}
+              >
+              增加local端最後一項產品
+              </button>
+              <button
+                type="button"
+                className="btn btn-success me-2"
+                onClick={handleAddAllProducts}
+              >
+              增加全部local端產品
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary  me-2"
+                onClick={handleGetProducs}
+              >
+              重新取得產品資料
+              </button>
+              <button
+                type="button"
+                className="btn btn-warning me-2"
+                onClick={handleDeleteAllProducts}
+              >
+              刪除全部產品
+              </button>
+              <button
+                type="button"
+                className="btn btn-warning me-2"
+                onClick={handleLogout}
+              >
+              登出
+              </button>
+            </div>
+          </div>
           <div className="row mt-5 mb-5 mx-3">
             <div className="col-md-6 mb-3">
               <h2>產品列表</h2>
@@ -140,8 +256,9 @@ function App() {
                     <th style={{ width: "25%" }}>產品名稱</th>
                     <th>原價</th>
                     <th>售價</th>
-                    <th>是否啟用</th>
-                    <th>查看細節</th>
+                    <th>啟用</th>
+                    <th style={{ width: "25%" }}>查看細節</th>
+                    <th style={{ width: "25%" }}>刪除</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -151,6 +268,7 @@ function App() {
                         key={product.id}
                         {...product}
                         onGetProduct={onGetProduct}
+                        onDeleteProduct={onDeleteProduct}
                       />
                     );
                   })}
