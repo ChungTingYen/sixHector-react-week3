@@ -15,6 +15,11 @@ export const axiosPostCheckSingin = async(path,config) =>{
   return response;
 };
 
+export const axiosPostCheckSingin2 = async(path) =>{
+  const response = await adminInstance.post(path,{});
+  return response;
+};
+
 export const axiosPostLogout = async(path,config) =>{
   const response = await adminInstance.post(path,{},{ headers: config });
   return response;

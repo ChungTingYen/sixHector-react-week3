@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-// import axios from "axios";
+import axios from "axios";
 import * as apiService from "./apiService/apiService";
 import { Products, ProductDetail, Modal } from "./component";
 import { productDataAtLocal } from "./productDataAtLocal";
 import { getHeadersFromCookie,getProductData } from './utlis/utlis';
+import { adminInstance } from './apiService/apiconfig';
 
 function App() {
   // const initRef = useRef(false);
@@ -31,8 +32,9 @@ function App() {
       if(res.data.success){
         const { token, expired } = res.data;
         document.cookie = `hexToken=${token}; expires=${new Date(expired)}`;
+        //執行axios.defaults.headers.common.Authorization
+        axios.defaults.headers.common.Authorization = token;
         setIsLogginged(true);
-        // axios.defaults.headers.common.Authorization = token;
         getProductData(token,null,setProductData);
       }
     } catch (error) {
@@ -43,11 +45,15 @@ function App() {
   
   const handleCheckLogin = async () => {
     try {
-      const headers = getHeadersFromCookie();
-      const res = await apiService.axiosPostCheckSingin(
-        "/api/user/check",
-        headers
-      );
+      // const headers = getHeadersFromCookie();
+      // const res = await apiService.axiosPostCheckSingin(
+      //   "/api/user/check",
+      //   headers
+      // );
+      //調用common.Authorization
+      // const res = await axios.post("https://ec-course-api.hexschool.io" + "/api/user/check",{});
+      const res = await apiService.axiosPostCheckSingin2("/api/user/check");
+
       alert(res.data.success ? "已登入成功" : "請重新登入");
     } catch (error) {
       alert(error.response.data.message);
