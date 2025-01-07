@@ -5,3 +5,4 @@ export { default as Modal } from './Modal';
 
 export { default as Products } from './Products';
 export { default as ProductDetail } from './ProductDetail';
+export { default as Loading } from './ProductDetail';

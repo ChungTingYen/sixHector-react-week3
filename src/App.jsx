@@ -1,14 +1,14 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import axios from "axios";
 import * as apiService from "./apiService/apiService";
-import { Products, ProductDetail, Modal } from "./component";
+import { Products, ProductDetail, Modal,Loading } from "./component";
 import { productDataAtLocal } from "./productDataAtLocal";
 import { getHeadersFromCookie,getProductData } from './utlis/utlis';
-import { adminInstance } from './apiService/apiconfig';
 
 function App() {
   // const initRef = useRef(false);
   // const [detailLoading, setDetailLoading] = useState("");
+  const AppModalRef = useRef(null);
   const [productData, setProductData] = useState([]);
   const [tempProduct, setTempProduct] = useState(null);
   const [account, setAccount] = useState({
@@ -35,7 +35,8 @@ function App() {
         //執行axios.defaults.headers.common.Authorization
         axios.defaults.headers.common.Authorization = token;
         setIsLogginged(true);
-        getProductData(token,null,setProductData);
+        await getProductData(token,null,setProductData);
+        // initRef.current = true;
       }
     } catch (error) {
       alert(error.response.data.message);
@@ -53,7 +54,6 @@ function App() {
       //調用common.Authorization
       // const res = await axios.post("https://ec-course-api.hexschool.io" + "/api/user/check",{});
       const res = await apiService.axiosPostCheckSingin2("/api/user/check");
-
       alert(res.data.success ? "已登入成功" : "請重新登入");
     } catch (error) {
       alert(error.response.data.message);
@@ -62,6 +62,7 @@ function App() {
   };
   const handleAddProduct = async ()=>{
     const wrapData = { data:productDataAtLocal[productDataAtLocal.length - 1] };
+    setTempProduct(null);
     try {
       const headers = getHeadersFromCookie();
       const resProduct = await apiService.axiosPostAddProduct(
@@ -70,7 +71,7 @@ function App() {
       );
       alert(resProduct.data.success ? resProduct.data.message : '新增商品失敗');
       if(resProduct.data.success){
-        getProductData(null,headers,setProductData);
+        await getProductData(null,headers,setProductData);
       }
     } catch (error){
       alert(error.response.data.message);
@@ -79,6 +80,12 @@ function App() {
   };
 
   const handleAddAllProducts = async()=>{
+    //測試Modal start
+    AppModalRef.current.open();
+    AppModalRef.current.setModalImage(null);
+    AppModalRef.current.toggleFooter(false);
+    //測試Modal end 
+
     const headers = getHeadersFromCookie();
     try {
       const resProducts = await Promise.all(
@@ -91,12 +98,15 @@ function App() {
           );
         })
       );
-      alert('所有產品都已成功上傳');
+      // alert('所有產品都已成功上傳');
       // console.log('所有產品都已成功上傳：', resProducts);
-      getProductData(null,headers,setProductData);
+      await getProductData(null,headers,setProductData);
+      setTempProduct(null);
+      AppModalRef.current.close();
     } catch (error) {
       console.error('上傳產品時發生錯誤：', error);
       alert(error.response.data.message);
+      AppModalRef.current.close();
     }
   };
 
@@ -108,6 +118,7 @@ function App() {
       if(res.data.success){
         setIsLogginged(false);
         setProductData([]);
+        setTempProduct(null);
       } 
     } catch (error) {
       alert(error.response.data.message);
@@ -116,6 +127,9 @@ function App() {
   };
   const handleDeleteAllProducts = async ()=>{
     const headers = getHeadersFromCookie();
+    AppModalRef.current.open();
+    AppModalRef.current.setModalImage(null);
+    AppModalRef.current.toggleFooter(false);
     try {
       const res = await Promise.all(
         productData.map(async (data) => {
@@ -125,26 +139,34 @@ function App() {
           );
         })
       );
-      alert('所有產品都已成功刪除');
-      console.log('所有產品都已成功刪除：', res);
-      getProductData(null,headers,setProductData);
+      await getProductData(null,headers,setProductData);
+      setTempProduct(null);
+      // alert('所有產品都已成功刪除');
+      // console.log('所有產品都已成功刪除：', res);
+      AppModalRef.current.close();
     } catch (error) {
       console.error('刪除產品時發生錯誤：', error);
       alert(error.response.data.message);
+      AppModalRef.current.close();
     }
   };
 
   const handleGetProducs = async ()=>{
+    AppModalRef.current.open();
+    AppModalRef.current.setModalImage(null);
+    AppModalRef.current.toggleFooter(false);
     try {
       const headers = getHeadersFromCookie();
       await getProductData(null,headers,setProductData);
-      alert("已重新取得商品資料");
+      // alert("已重新取得商品資料");
+      setTempProduct(null);
     } catch (error) {
       alert(error.response.data.message);
       console.log(error);
     }
+    AppModalRef.current.close();
   };
-  // const AppModalRef = useRef(null);
+ 
   const onGetProduct = useCallback(
     (productId) => {
       // console.log("productId=", productId);
@@ -156,7 +178,7 @@ function App() {
       const filterProduct =
         productData.filter((product) => product.id === productId)[0] || [];
       setTempProduct(filterProduct);
-      //測試用Modal
+      //測試用Modal，點擊會出現Modal顯示載入中
       // AppModalRef.current.open();
       // AppModalRef.current.setModalImage(null);
       // setDetailLoading(productId);
@@ -168,24 +190,29 @@ function App() {
   );
   const onDeleteProduct = useCallback(
     async (productId) => {
-      console.log("productId=", productId);
+      // console.log("productId=", productId);
+      AppModalRef.current.open();
+      AppModalRef.current.setModalImage(null);
+      AppModalRef.current.toggleFooter(false);
       const headers = getHeadersFromCookie();
       try {
         const res = await apiService.axiosDeleteProduct(
           `/api/${APIPath}/admin/product/${productId}`,
           headers
         );
-        alert('產品已成功刪除');
-        console.log('產品已成功刪除：', res);
-        getProductData(null,headers,setProductData);
+        // console.log('產品已成功刪除：', res);
+        await getProductData(null,headers,setProductData);
+        setTempProduct(null);
+        AppModalRef.current.close();
       } catch (error) {
         console.error('刪除產品時發生錯誤：', error);
         alert(error.response.data.message);
+        AppModalRef.current.close();
       }
     },[]);
-  // useEffect(()=>{
-  //   setNeedRefreshProductCard(false);
-  // },[needRefreshProductCard]);
+  useEffect(()=>{
+    console.log('tempProduct');
+  });
   //測試用Modal
   // useEffect(() => {
   //   if (detailLoading && Object.keys(tempProduct).length > 0) {
@@ -195,17 +222,18 @@ function App() {
   //     return () => clearTimeout(timeId);
   //   }
   // }, [detailLoading]);
+
   return (
     <>
       {/* <pre>{JSON.stringify(productData, null, 2)}</pre> */}
       {isLogginged ? (
         <>
-          {/* <Modal
+          <Modal
             ref={AppModalRef}
-            modalBodyText="商品細節載入中"
+            modalBodyText="載入中"
             modalSize={{ width: "200px", height: "200px" }}
             modalImgSize={{ width: "200px", height: "120px" }}
-          /> */}
+          />
           <div className="row mt-5 mb-5 mx-3">
             <p className="text-secondary">Logginged</p>
             <div className="d-flex"> 
@@ -253,52 +281,56 @@ function App() {
               </button>
             </div>
           </div>
-          <div className="row mt-5 mb-5 mx-3">
-            <div className="col-md-6 mb-3">
-              <h2>產品列表</h2>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th style={{ width: "25%" }}>產品名稱</th>
-                    <th>原價</th>
-                    <th>售價</th>
-                    <th>啟用</th>
-                    <th style={{ width: "25%" }}>查看細節</th>
-                    <th style={{ width: "25%" }}>刪除</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {productData.map((product) => {
-                    return (
-                      <Products
-                        key={product.id}
-                        {...product}
-                        onGetProduct={onGetProduct}
-                        onDeleteProduct={onDeleteProduct}
-                      />
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            <div className="col-md-6">
-              <h2>單一產品細節</h2>
-              {tempProduct ? (
-                <ProductDetail
-                  title={tempProduct.title}
-                  imageUrl={tempProduct.imageUrl}
-                  description={tempProduct.description}
-                  content={tempProduct.content}
-                  origin_price={tempProduct.origin_price}
-                  price={tempProduct.price}
-                  imagesUrl={tempProduct.imagesUrl}
-                  category={tempProduct.category}
-                />
-              ) : (
-                <p className="text-secondary">請選擇一個商品查看</p>
-              )}
-            </div>
-          </div>
+          {
+            (productData.length > 0 ? (
+              <div className="row mt-5 mb-5 mx-3">    
+                <div className="col-md-6 mb-3">
+                  <h2>產品列表</h2>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "25%" }}>產品名稱</th>
+                        <th>原價</th>
+                        <th>售價</th>
+                        <th>啟用</th>
+                        <th style={{ width: "25%" }}>查看細節</th>
+                        <th style={{ width: "25%" }}>刪除</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {productData.map((product) => {
+                        return (
+                          <Products
+                            key={product.id}
+                            {...product}
+                            onGetProduct={onGetProduct}
+                            onDeleteProduct={onDeleteProduct}
+                          />
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="col-md-6">
+                  <h2>單一產品細節</h2>
+                  {tempProduct ? (
+                    <ProductDetail
+                      title={tempProduct.title}
+                      imageUrl={tempProduct.imageUrl}
+                      description={tempProduct.description}
+                      content={tempProduct.content}
+                      origin_price={tempProduct.origin_price}
+                      price={tempProduct.price}
+                      imagesUrl={tempProduct.imagesUrl}
+                      category={tempProduct.category}
+                    />
+                  ) : (
+                    <p className="text-secondary">請選擇一個商品查看</p>
+                  )}
+                </div>
+              </div>)
+              : (<h1>沒有商品或商品載入中</h1>) )
+          }
         </>
       ) : (
         <div className="d-flex flex-column justify-content-center align-items-center vh-100">
