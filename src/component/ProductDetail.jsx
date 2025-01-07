@@ -43,21 +43,23 @@ const ProductDetail = (props) => {
           </div>
           <h5 className="mt-3">更多圖片：</h5>
           <div className="d-flex flex-wrap">
-            {imagesUrl.map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                className="card-img-top primary-image me-2 mb-1"
-                alt={`更多圖片${index}`}
-                style={{
-                  width: "250px",
-                  height: "250px",
-                  objectFit: "cover",
-                  cursor: "pointer", // 這裡設置光標為手指圖樣
-                }}
-                onClick={() => handleImageClick(image)}
-              />
-            ))}
+            {imagesUrl
+              .filter((item) => item != "")
+              .map((image, index) => (
+                <img
+                  key={index}
+                  src={image}
+                  className="card-img-top primary-image me-2 mb-1"
+                  alt={`更多圖片${index}`}
+                  style={{
+                    width: "250px",
+                    height: "250px",
+                    objectFit: "cover",
+                    cursor: "pointer", // 這裡設置光標為手指圖樣
+                  }}
+                  onClick={() => handleImageClick(image)}
+                />
+              ))}
           </div>
         </div>
       </div>

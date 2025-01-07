@@ -2,7 +2,16 @@
 import React, { useEffect, useState, useRef } from "react";
 // import Modal from "./Modal";
 const Product = (props) => {
-  const { id, title, origin_price, price, is_enabled, onGetProduct,onDeleteProduct } = props;
+  const {
+    index,
+    id,
+    title,
+    origin_price,
+    price,
+    is_enabled,
+    onGetProduct,
+    onDeleteProduct,
+  } = props;
   const atGetProduct = () => {
     onGetProduct(id);
   };
@@ -13,6 +22,7 @@ const Product = (props) => {
     <>
       {
         <tr>
+          <th scope="row">{index}</th>
           <th scope="row">{title}</th>
           {/* <td>{title}</td> */}
           <td>{origin_price}</td>
