@@ -4,12 +4,14 @@ import * as apiService from "./apiService/apiService";
 import { Products, ProductDetail, Modal, Loading } from "./component";
 // import { productDataAtLocal } from "./productDataAtLocal";
 import { productDataAtLocal } from "./products";
-import {
-  getHeadersFromCookie,
-  getProductData,
-  deleteProductsSequentially,
-  AddProductsSequentially,
-} from "./utlis/utlis";
+import * as utils from "./utils/utils";
+// import {
+//   getHeadersFromCookie,
+//   getProductData,
+//   deleteProductsSequentially,
+//   AddProductsSequentially,
+//   modalStatus,
+// } from "./utlis/utlis";
 
 function App() {
   // const initRef = useRef(false);
@@ -22,16 +24,16 @@ function App() {
     password: "",
   });
   const AppModalRef = useRef(null);
-  const [selectedRowIndex,setSelectedRowIndex] = useState(null);
+  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
   const APIPath = import.meta.env.VITE_API_PATH;
-  const [isLogginged, setIsLogginged] = useState(false);
+  const [isLoggin, setIsLoggin] = useState(false);
   const changeInput = (e) => {
     setAccount({
       ...account,
       [e.target.name]: e.target.value,
     });
   };
-
+  //登入
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
@@ -42,8 +44,8 @@ function App() {
         document.cookie = `hexToken=${token}; expires=${new Date(expired)}`;
         //執行axios.defaults.headers.common.Authorization
         axios.defaults.headers.common.Authorization = token;
-        setIsLogginged(true);
-        await getProductData(token, null, setProductData);
+        setIsLoggin(true);
+        await utils.getProductData(token, null, setProductData);
         // initRef.current = true;
       }
     } catch (error) {
@@ -51,7 +53,7 @@ function App() {
       console.log(error);
     }
   };
-
+  //檢查登入狀態
   const handleCheckLogin = async () => {
     try {
       // const headers = getHeadersFromCookie();
@@ -68,14 +70,15 @@ function App() {
       console.log(error);
     }
   };
+  //上傳內建資料隨機一項產品
   const handleAddProduct = async () => {
-    const productIndex = parseInt(Date.now()) % (productDataAtLocal.length);
+    const productIndex = parseInt(Date.now()) % productDataAtLocal.length;
     const wrapData = {
       data: productDataAtLocal[productIndex],
     };
     setTempProduct(null);
     try {
-      const headers = getHeadersFromCookie();
+      const headers = utils.getHeadersFromCookie();
       const resProduct = await apiService.axiosPostAddProduct(
         `/api/${APIPath}/admin/product`,
         wrapData,
@@ -83,56 +86,43 @@ function App() {
       );
       alert(resProduct.data.success ? resProduct.data.message : "新增商品失敗");
       if (resProduct.data.success) {
-        await getProductData(null, headers, setProductData);
+        await utils.getProductData(null, headers, setProductData);
       }
     } catch (error) {
       alert(error.response.data.message);
       console.log(error);
     }
   };
-
+  //上傳全部內建資料產品
   const handleAddAllProducts = async () => {
-    //測試Modal start
-    AppModalRef.current.setImgAlt('上傳中');
-    AppModalRef.current.setModalImage(null);
-    AppModalRef.current.toggleFooter(false);
-    AppModalRef.current.open();
-    //測試Modal end
-    const headers = getHeadersFromCookie();
-    const results = (await AddProductsSequentially(productDataAtLocal)) || [];
-    await getProductData(null, headers, setProductData);
+    modalStatus(AppModalRef, "上傳中", null, false);
+    const headers = utils.getHeadersFromCookie();
+    const results =
+      (await utils.AddProductsSequentially(productDataAtLocal)) || [];
+    await utils.getProductData(null, headers, setProductData);
     setTempProduct(null);
-    AppModalRef.current.close();
     if (results.length > 0) alert(results.join(","));
   };
+  //刪除全部產品
   const handleDeleteAllProducts = async () => {
-
-    AppModalRef.current.setImgAlt('刪除中');
-    AppModalRef.current.setModalImage(null);
-    AppModalRef.current.toggleFooter(false);
-    AppModalRef.current.open();
-    console.log('handleDeleteAllProducts');
-    if(productData.length > 0){
-      const headers = getHeadersFromCookie();
-      const results = (await deleteProductsSequentially(productData)) || [];
-      await getProductData(null, headers, setProductData);
+    modalStatus(AppModalRef, "刪除中", null, false);
+    if (productData.length > 0) {
+      const headers = utils.getHeadersFromCookie();
+      const results =
+        (await utils.deleteProductsSequentially(productData)) || [];
+      await utils.getProductData(null, headers, setProductData);
       setTempProduct(null);
       if (results.length > 0) alert(results.join(","));
-      console.log('fdsfdsfdsfd');
     }
-    setTimeout(() => {
-      AppModalRef.current.close();
-    }, 500);
-    
   };
-
+  // 登出
   const handleLogout = async () => {
     try {
-      const headers = getHeadersFromCookie();
+      const headers = utils.getHeadersFromCookie();
       const res = await apiService.axiosPostLogout("/logout", headers);
       alert(res.data.success ? res.data.message : "登出失敗");
       if (res.data.success) {
-        setIsLogginged(false);
+        setIsLoggin(false);
         setProductData([]);
         setTempProduct(null);
       }
@@ -141,25 +131,20 @@ function App() {
       console.log(error);
     }
   };
-
-  const handleGetProducs = async () => {
-    AppModalRef.current.setImgAlt('載入中');
-    AppModalRef.current.setModalImage(null);
-    AppModalRef.current.toggleFooter(false);
-    AppModalRef.current.open();
-    console.log('handleGetProducs');
+  //重新取得產品資料
+  const handleGetProducts = async () => {
+    modalStatus(AppModalRef, "載入中", null, false);
+    setSelectedRowIndex("");
     try {
-      const headers = getHeadersFromCookie();
-      await getProductData(null, headers, setProductData);
+      const headers = utils.getHeadersFromCookie();
+      await utils.getProductData(null, headers, setProductData);
       // alert("已重新取得商品資料");
       setTempProduct(null);
-      AppModalRef.current.close();
     } catch (error) {
       alert(error.response.data.message);
       console.log(error);
       AppModalRef.current.close();
     }
-    // AppModalRef.current.close();
   };
 
   const onGetProduct = useCallback(
@@ -184,33 +169,40 @@ function App() {
     },
     [tempProduct, productData]
   );
-  const onDeleteProduct = useCallback(async (productId) => {
-    // console.log("productId=", productId);
-    AppModalRef.current.setImgAlt('刪除中');
-    AppModalRef.current.setModalImage(null);
-    AppModalRef.current.toggleFooter(false);
-    AppModalRef.current.open();
-    const headers = getHeadersFromCookie();
-    try {
-      const res = await apiService.axiosDeleteProduct(
-        `/api/${APIPath}/admin/product/${productId}`,
-        headers
-      );
-
-      await getProductData(null, headers, setProductData);
-      if(tempProduct?.id === productId){
-        setTempProduct(null);
+  const onDeleteProduct = useCallback(
+    async (productId) => {
+      modalStatus(AppModalRef, "刪除中", null, false);
+      const headers = utils.getHeadersFromCookie();
+      try {
+        const res = await apiService.axiosDeleteProduct(
+          `/api/${APIPath}/admin/product/${productId}`,
+          headers
+        );
+        await utils.getProductData(null, headers, setProductData);
+        if (tempProduct?.id === productId) {
+          setTempProduct(null);
+        }
+      } catch (error) {
+        console.error("刪除產品時發生錯誤：", error);
+        alert("刪除產品時發生錯誤：", error);
+        AppModalRef.current.close();
       }
-      AppModalRef.current.close();
-    } catch (error) {
-      console.error("刪除產品時發生錯誤：", error);
-      alert("刪除產品時發生錯誤：", error);
-      AppModalRef.current.close();
-    }
-  }, [tempProduct]);
+    },
+    [tempProduct]
+  );
+  const modalStatus = (AppModalRef, imgAlt, modalImg, toggleFooter) => {
+    AppModalRef.current.setImgAlt(imgAlt);
+    AppModalRef.current.setModalImage(modalImg);
+    AppModalRef.current.toggleFooter(toggleFooter);
+    AppModalRef.current.open();
+  };
   useEffect(() => {
-    console.log("tempProduct=",tempProduct?.id);
-  });
+    if (AppModalRef.current) {
+      AppModalRef.current.close();
+      console.log("useEffect AppModalRef.current.close();");
+    }
+    // console.log("tempProduct=", tempProduct?.id);
+  }, [productData]);
   //測試用Modal
   // useEffect(() => {
   //   if (detailLoading && Object.keys(tempProduct).length > 0) {
@@ -224,7 +216,7 @@ function App() {
   return (
     <>
       {/* <pre>{JSON.stringify(productData, null, 2)}</pre> */}
-      {isLogginged ? (
+      {isLoggin ? (
         <>
           <Modal
             ref={AppModalRef}
@@ -233,7 +225,7 @@ function App() {
             modalImgSize={{ width: "200px", height: "120px" }}
           />
           <div className="row mt-5 mb-5 mx-3">
-            <p className="text-secondary">Logginged</p>
+            <p className="text-secondary">Logging</p>
             <div className="d-flex">
               <button
                 type="button"
@@ -259,7 +251,7 @@ function App() {
               <button
                 type="button"
                 className="btn btn-secondary me-2"
-                onClick={handleGetProducs}
+                onClick={handleGetProducts}
               >
                 重新取得產品資料
               </button>
@@ -304,7 +296,7 @@ function App() {
                           index={index}
                           onGetProduct={onGetProduct}
                           onDeleteProduct={onDeleteProduct}
-                          isSelected={product.id === selectedRowIndex} 
+                          isSelected={product.id === selectedRowIndex}
                         />
                       );
                     })}

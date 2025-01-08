@@ -73,3 +73,10 @@ export async function AddProductsSequentially(productData) {
     } 
   } return results; 
 }
+
+export const modalStatus = (imgAlt,modalImg,toggleFooter,)=>{
+  AppModalRef.current.setImgAlt(imgAlt);
+  AppModalRef.current.setModalImage(modalImg);
+  AppModalRef.current.toggleFooter(toggleFooter);
+  AppModalRef.current.open();
+};
