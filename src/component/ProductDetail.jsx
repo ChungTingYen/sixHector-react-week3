@@ -27,7 +27,7 @@ const ProductDetail = (props) => {
           src={imageUrl}
           className="card-img-top primary-image"
           alt="主圖"
-          style={{ width: "400px", height: "400px" }}
+          style={ { width: "90%", height: "100%",objectFit: "cover", }}
           ref={imgSrcRef}
         />
         <div className="card-body">

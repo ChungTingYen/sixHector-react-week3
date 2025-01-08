@@ -271,10 +271,9 @@ function App() {
             </div>
           </div>
           {productData.length > 0 ? (
-            <div className="row mt-5 mb-5 mx-3">
-              <div className="col-md-7 mb-3">
-                <h2>產品列表</h2>
-                <h1>產品總數:{productData.length}</h1>
+            <div className="row mt-5 mb-5 mx-1">
+              <div className="col-md-6 mb-3">
+                <h2>產品列表,本頁產品數:{productData.length}</h2>
                 <table className="table">
                   <thead>
                     <tr>
@@ -284,7 +283,7 @@ function App() {
                       <th>售價</th>
                       <th>啟用</th>
                       <th style={{ width: "25%" }}>查看細節</th>
-                      <th style={{ width: "25%" }}>刪除</th>
+                      <th style={{ width: "20%" }}>刪除</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -303,7 +302,7 @@ function App() {
                   </tbody>
                 </table>
               </div>
-              <div className="col-md-4">
+              <div className="col-md-6">
                 <h2>單一產品細節</h2>
                 {tempProduct ? (
                   <ProductDetail
