@@ -11,6 +11,7 @@ const Product = (props) => {
     is_enabled,
     onGetProduct,
     onDeleteProduct,
+    isSelected,
   } = props;
   const atGetProduct = () => {
     onGetProduct(id);
@@ -21,8 +22,8 @@ const Product = (props) => {
   return (
     <>
       {
-        <tr>
-          <th scope="row">{index}</th>
+        <tr className={ isSelected ? "table-info" : "" } id={id}>
+          <th scope="row" >{index} </th>
           <th scope="row">{title}</th>
           {/* <td>{title}</td> */}
           <td>{origin_price}</td>

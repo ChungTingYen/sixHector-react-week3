@@ -19,6 +19,7 @@ const ProductDetail = (props) => {
   };
   const modalRef = useRef(null);
   const imgSrcRef = useRef(null);
+  
   return (
     <>
       <div className="card mb-3" style={{ border: "none" }}>

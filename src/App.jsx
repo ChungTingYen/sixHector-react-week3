@@ -14,13 +14,15 @@ import {
 function App() {
   // const initRef = useRef(false);
   // const [detailLoading, setDetailLoading] = useState("");
-  const AppModalRef = useRef(null);
+
   const [productData, setProductData] = useState([]);
   const [tempProduct, setTempProduct] = useState(null);
   const [account, setAccount] = useState({
     username: "",
     password: "",
   });
+  const AppModalRef = useRef(null);
+  const [selectedRowIndex,setSelectedRowIndex] = useState(null);
   const APIPath = import.meta.env.VITE_API_PATH;
   const [isLogginged, setIsLogginged] = useState(false);
   const changeInput = (e) => {
@@ -68,7 +70,6 @@ function App() {
   };
   const handleAddProduct = async () => {
     const productIndex = parseInt(Date.now()) % (productDataAtLocal.length);
-    console.log(productIndex);
     const wrapData = {
       data: productDataAtLocal[productIndex],
     };
@@ -157,12 +158,13 @@ function App() {
       // console.log("productId=", productId);
       if (tempProduct?.id === productId) {
         // 當前選擇的產品與上一次相同，不進行任何操作
-        // console.log("產品ID相同，不重複打開模態框");
+        console.log("產品ID相同，不重複打開模態框");
         return;
       }
       const filterProduct =
         productData.filter((product) => product.id === productId)[0] || [];
       setTempProduct(filterProduct);
+      setSelectedRowIndex(filterProduct.id);
       //測試用Modal，點擊會出現Modal顯示載入中
       // AppModalRef.current.open();
       // AppModalRef.current.setModalImage(null);
@@ -185,18 +187,20 @@ function App() {
         `/api/${APIPath}/admin/product/${productId}`,
         headers
       );
-      // console.log('產品已成功刪除：', res);
+
       await getProductData(null, headers, setProductData);
-      setTempProduct(null);
+      if(tempProduct?.id === productId){
+        setTempProduct(null);
+      }
       AppModalRef.current.close();
     } catch (error) {
       console.error("刪除產品時發生錯誤：", error);
-      alert(error.response.data.message);
+      alert("刪除產品時發生錯誤：", error);
       AppModalRef.current.close();
     }
-  }, []);
+  }, [tempProduct]);
   // useEffect(() => {
-  //   console.log("tempProduct");
+  //   console.log("tempProduct=",tempProduct?.id);
   // });
   //測試用Modal
   // useEffect(() => {
@@ -292,6 +296,7 @@ function App() {
                           index={index}
                           onGetProduct={onGetProduct}
                           onDeleteProduct={onDeleteProduct}
+                          isSelected={product.id === selectedRowIndex} 
                         />
                       );
                     })}
@@ -303,6 +308,7 @@ function App() {
                 {tempProduct ? (
                   <ProductDetail
                     title={tempProduct.title}
+                    imageUrl={tempProduct.imageUrl}
                     setImgAlt={tempProduct.setImgAlt}
                     description={tempProduct.description}
                     content={tempProduct.content}
