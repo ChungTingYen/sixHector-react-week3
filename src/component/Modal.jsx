@@ -55,7 +55,10 @@ const Modal = forwardRef((props, ref) => {
       open() {
         openModal();
       },
-      close: closeModal,
+      close(){
+        closeModal();
+      },
+      // close: closeModal,
       // setModalImage: setImage,
       // setModalImage(src){
       //   setImageSrc(src);

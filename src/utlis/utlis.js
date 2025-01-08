@@ -26,7 +26,7 @@ export const getProductData = async (token,headers,setProductData)=>{
     const resProduct = await apiService.axiosGetProductData(
       `/api/${APIPath}/admin/products`,
       headers
-    );
+    ) || [];
     setProductData(resProduct.data.products);
   } catch (error) {
     alert(error.response.data.message);

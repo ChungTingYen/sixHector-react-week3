@@ -106,16 +106,24 @@ function App() {
     if (results.length > 0) alert(results.join(","));
   };
   const handleDeleteAllProducts = async () => {
+
     AppModalRef.current.setImgAlt('刪除中');
     AppModalRef.current.setModalImage(null);
     AppModalRef.current.toggleFooter(false);
     AppModalRef.current.open();
-    const headers = getHeadersFromCookie();
-    const results = (await deleteProductsSequentially(productData)) || [];
-    await getProductData(null, headers, setProductData);
-    setTempProduct(null);
-    AppModalRef.current.close();
-    if (results.length > 0) alert(results.join(","));
+    console.log('handleDeleteAllProducts');
+    if(productData.length > 0){
+      const headers = getHeadersFromCookie();
+      const results = (await deleteProductsSequentially(productData)) || [];
+      await getProductData(null, headers, setProductData);
+      setTempProduct(null);
+      if (results.length > 0) alert(results.join(","));
+      console.log('fdsfdsfdsfd');
+    }
+    setTimeout(() => {
+      AppModalRef.current.close();
+    }, 500);
+    
   };
 
   const handleLogout = async () => {
@@ -138,19 +146,20 @@ function App() {
     AppModalRef.current.setImgAlt('載入中');
     AppModalRef.current.setModalImage(null);
     AppModalRef.current.toggleFooter(false);
-    
     AppModalRef.current.open();
+    console.log('handleGetProducs');
     try {
       const headers = getHeadersFromCookie();
       await getProductData(null, headers, setProductData);
       // alert("已重新取得商品資料");
       setTempProduct(null);
+      AppModalRef.current.close();
     } catch (error) {
       alert(error.response.data.message);
       console.log(error);
       AppModalRef.current.close();
     }
-    AppModalRef.current.close();
+    // AppModalRef.current.close();
   };
 
   const onGetProduct = useCallback(
@@ -199,9 +208,9 @@ function App() {
       AppModalRef.current.close();
     }
   }, [tempProduct]);
-  // useEffect(() => {
-  //   console.log("tempProduct=",tempProduct?.id);
-  // });
+  useEffect(() => {
+    console.log("tempProduct=",tempProduct?.id);
+  });
   //測試用Modal
   // useEffect(() => {
   //   if (detailLoading && Object.keys(tempProduct).length > 0) {
