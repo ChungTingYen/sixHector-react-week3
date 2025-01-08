@@ -38,15 +38,15 @@ export async function deleteProductsSequentially(productData) {
   const results = []; 
   const headers = getHeadersFromCookie();
   for (const [index, data] of productData.entries()) { 
-    console.log(`index=${index}`); 
+    // console.log(`index=${index}`); 
     // console.log("headers=", headers); 
     try { 
       await apiService.axiosDeleteProduct( `/api/${APIPath}/admin/product/${data.id}`, 
         headers ); 
-      // results.push(result); 
     } catch (error) { 
       console.error(`Error deleting product ${data.id}:`, error);
-      results.push(null); 
+      const errorMessage = `Error adding product ${data.id}:`;
+      results.push(errorMessage); 
       // 或其他適當的錯誤處理方式 
     } 
   } return results; 
@@ -65,10 +65,10 @@ export async function AddProductsSequentially(productData) {
         wrapData,
         headers
       );
-      // results.push(result); 
     } catch (error) { 
       console.error(`Error adding product ${data.id}:`, error);
-      results.push(null); 
+      const errorMessage = `Error adding product ${data.id}:`;
+      results.push(errorMessage); 
       // 或其他適當的錯誤處理方式 
     } 
   } return results; 

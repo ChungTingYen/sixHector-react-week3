@@ -11,11 +11,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import * as bootstrap from "bootstrap";
 
 const Modal = forwardRef((props, ref) => {
-  const { modalBodyText, modalSize, modalImgSize } = props;
+  const { modalBodyText, modalSize, modalImgSize,xxxx } = props;
   const modalDivRef = useRef(null);
   const modalRef = useRef(null);
-  const initRef = useRef(false);
-  const [imageSrc, setImageSrc] = useState("");
+  const imageRef = useRef(null);
+  // const initRef = useRef(false);
+  // const [imageSrc, setImageSrc] = useState("");
   // const restoreStyle = () => {
   //   // 清除 modal 陰影
   //   document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
@@ -47,10 +48,7 @@ const Modal = forwardRef((props, ref) => {
   const openModal = () => {
     modalRef.current.show();
   };
-  const setImage = (src) => {
-    setImageSrc(src);
-    initRef.current = true;
-  };
+
   useImperativeHandle(ref, () => {
     return {
       //open close2種寫法
@@ -58,7 +56,7 @@ const Modal = forwardRef((props, ref) => {
         openModal();
       },
       close: closeModal,
-      setModalImage: setImage,
+      // setModalImage: setImage,
       // setModalImage(src){
       //   setImageSrc(src);
       //   initRef.current = true;
@@ -70,6 +68,18 @@ const Modal = forwardRef((props, ref) => {
         } else {
           modalDivRef.current.querySelector(".modal-footer").style.display =
             "none";
+        }
+      },
+      setModalImage(src) {
+        if (imageRef.current) { 
+          imageRef.current.src = src; 
+          // 直接修改圖像的 src 屬性 
+        }
+      },
+      setImgAlt(text){
+        if (imageRef.current) { 
+          imageRef.current.alt = text; 
+          // 直接修改圖像的 alt 屬性 
         }
       },
       //把modalDivRef傳出去給父層控制
@@ -110,9 +120,10 @@ const Modal = forwardRef((props, ref) => {
               id="modalBody"
             >
               <img
-                src={imageSrc}
+                // src={imageSrc}
+                ref={imageRef}
                 className="img-fluid"
-                alt="載入中"
+                alt=''
                 style={{ maxWidth: "100%", maxHeight: "100%" }}
                 id="picture"
               />

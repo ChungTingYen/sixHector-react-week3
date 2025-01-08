@@ -13,9 +13,9 @@ const ProductDetail = (props) => {
     category,
   } = props;
   const handleImageClick = (imageSrc) => {
+    imgSrcRef.current.src = imageSrc;
     modalRef.current.setModalImage(imageSrc);
     modalRef.current.open();
-    imgSrcRef.current.src = imageSrc;
   };
   const modalRef = useRef(null);
   const imgSrcRef = useRef(null);

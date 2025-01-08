@@ -67,8 +67,10 @@ function App() {
     }
   };
   const handleAddProduct = async () => {
+    const productIndex = parseInt(Date.now()) % (productDataAtLocal.length);
+    console.log(productIndex);
     const wrapData = {
-      data: productDataAtLocal[productDataAtLocal.length - 1],
+      data: productDataAtLocal[productIndex],
     };
     setTempProduct(null);
     try {
@@ -90,60 +92,29 @@ function App() {
 
   const handleAddAllProducts = async () => {
     //測試Modal start
-    AppModalRef.current.open();
+    AppModalRef.current.setImgAlt('上傳中');
     AppModalRef.current.setModalImage(null);
     AppModalRef.current.toggleFooter(false);
+    AppModalRef.current.open();
     //測試Modal end
     const headers = getHeadersFromCookie();
-
     const results = (await AddProductsSequentially(productDataAtLocal)) || [];
     await getProductData(null, headers, setProductData);
     setTempProduct(null);
     AppModalRef.current.close();
     if (results.length > 0) alert(results.join(","));
-    // const results = [];
-    // for (const [index, data] of productDataAtLocal.entries()) {
-    //   // console.log(`index=${index}`);
-    //   // console.log("headers=", headers);
-    //   const wrapData = { data: data };
-    //   try {
-    //     await apiService.axiosPostAddProduct(
-    //       `/api/${APIPath}/admin/product`,
-    //       wrapData,
-    //       headers
-    //     );
-    //     // results.push(result);
-    //   } catch (error) {
-    //     console.error(`Error adding product ${data.id}:`, error);
-    //     results.push(`＄{data.id}產生錯誤`);
-    //     // 或其他適當的錯誤處理方式
-    //   }
-    // }
-    // try {
-    //   const resProducts = await Promise.all(
-    //     productDataAtLocal.map(async (data, index) => {
-    //       const wrapData = { data: data };
-    //       console.log(`index=${index}`);
-    //       console.log("headers=", headers);
-    //       return await apiService.axiosPostAddProduct(
-    //         `/api/${APIPath}/admin/product`,
-    //         wrapData,
-    //         headers
-    //       );
-    //     })
-    //   );
-    //   // alert('所有產品都已成功上傳');
-    //   // console.log('所有產品都已成功上傳：', resProducts);
-    //   console.log("headers=", headers);
-    //   await getProductData(null, headers, setProductData);
-    //   setTempProduct(null);
-    //   AppModalRef.current.close();
-    // } catch (error) {
-    //   console.error("上傳產品時發生錯誤：", error);
-    //   if (error.request.response.message) alert(error.request.response.message);
-    //   else alert(error.response.data.message);
-    //   AppModalRef.current.close();
-    // }
+  };
+  const handleDeleteAllProducts = async () => {
+    AppModalRef.current.setImgAlt('刪除中');
+    AppModalRef.current.setModalImage(null);
+    AppModalRef.current.toggleFooter(false);
+    AppModalRef.current.open();
+    const headers = getHeadersFromCookie();
+    const results = (await deleteProductsSequentially(productData)) || [];
+    await getProductData(null, headers, setProductData);
+    setTempProduct(null);
+    AppModalRef.current.close();
+    if (results.length > 0) alert(results.join(","));
   };
 
   const handleLogout = async () => {
@@ -161,62 +132,13 @@ function App() {
       console.log(error);
     }
   };
-  const handleDeleteAllProducts = async () => {
-    const headers = getHeadersFromCookie();
-    AppModalRef.current.open();
-    AppModalRef.current.setModalImage(null);
-    AppModalRef.current.toggleFooter(false);
-
-    const results = (await deleteProductsSequentially(productData)) || [];
-    await getProductData(null, headers, setProductData);
-    setTempProduct(null);
-    AppModalRef.current.close();
-    if (results.length > 0) alert(results.join(","));
-    // const results = [];
-    // for (const [index, data] of productData.entries()) {
-    //   // console.log(`index=${index}`);
-    //   // console.log("headers=", headers);
-    //   try {
-    //     await apiService.axiosDeleteProduct(
-    //       `/api/${APIPath}/admin/product/${data.id}`,
-    //       headers
-    //     );
-    //     // results.push(result);
-    //   } catch (error) {
-    //     console.error(`Error deleting product ${data.id}:`, error);
-    //     results.push(`＄{data.id}產生錯誤`);
-    //     // 或其他適當的錯誤處理方式
-    //   }
-    // }
-    // await getProductData(null, headers, setProductData);
-    // setTempProduct(null);
-    // AppModalRef.current.close();
-    // if (results.length > 0) alert(results.join(","));
-    // try {
-    // const res = await Promise.all(
-    //   productData.map(async (data, index) => {
-    //     console.log(`index=${index}`);
-    //     console.log("headers=", headers);
-    //     return apiService.axiosDeleteProduct(
-    //       `/api/${APIPath}/admin/product/${data.id}`,
-    //       headers
-    //     );
-    //   })
-    // );
-    // } catch (error) {
-    //   console.error("刪除產品時發生錯誤：", error);
-    //   if (error.request.response.message) alert(error.request.response.message);
-    //   else alert(error.response.data.message);
-    //   AppModalRef.current.close();
-    // }
-    // alert('所有產品都已成功刪除');
-    // console.log('所有產品都已成功刪除：', res);
-  };
 
   const handleGetProducs = async () => {
-    AppModalRef.current.open();
+    AppModalRef.current.setImgAlt('載入中');
     AppModalRef.current.setModalImage(null);
     AppModalRef.current.toggleFooter(false);
+    
+    AppModalRef.current.open();
     try {
       const headers = getHeadersFromCookie();
       await getProductData(null, headers, setProductData);
@@ -225,6 +147,7 @@ function App() {
     } catch (error) {
       alert(error.response.data.message);
       console.log(error);
+      AppModalRef.current.close();
     }
     AppModalRef.current.close();
   };
@@ -252,9 +175,10 @@ function App() {
   );
   const onDeleteProduct = useCallback(async (productId) => {
     // console.log("productId=", productId);
-    AppModalRef.current.open();
+    AppModalRef.current.setImgAlt('刪除中');
     AppModalRef.current.setModalImage(null);
     AppModalRef.current.toggleFooter(false);
+    AppModalRef.current.open();
     const headers = getHeadersFromCookie();
     try {
       const res = await apiService.axiosDeleteProduct(
@@ -291,7 +215,7 @@ function App() {
         <>
           <Modal
             ref={AppModalRef}
-            modalBodyText="載入中"
+            modalBodyText="訊息"
             modalSize={{ width: "200px", height: "200px" }}
             modalImgSize={{ width: "200px", height: "120px" }}
           />
@@ -310,7 +234,7 @@ function App() {
                 className="btn btn-success me-2"
                 onClick={handleAddProduct}
               >
-                上傳內建資料最後一項產品
+                上傳內建資料隨機一項產品
               </button>
               <button
                 type="button"
@@ -379,7 +303,7 @@ function App() {
                 {tempProduct ? (
                   <ProductDetail
                     title={tempProduct.title}
-                    imageUrl={tempProduct.imageUrl}
+                    setImgAlt={tempProduct.setImgAlt}
                     description={tempProduct.description}
                     content={tempProduct.content}
                     origin_price={tempProduct.origin_price}
