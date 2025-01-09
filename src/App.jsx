@@ -224,7 +224,7 @@ function App() {
             modalSize={{ width: "200px", height: "200px" }}
             modalImgSize={{ width: "200px", height: "120px" }}
           />
-          <div className="row mt-5 mb-5 mx-3">
+          <div className="row mt-5 mb-3 mx-3">
             <p className="text-secondary">Logging</p>
             <div className="d-flex">
               <button
@@ -270,26 +270,25 @@ function App() {
                 登出
               </button>
             </div>
+            <div className="d-flex align-items-center mt-3">
+              <div className="me-3">
+                      搜尋名稱:<input type="search" style={{ width: "100px" }} onChange={(e)=>{
+                  setSearch(e.target.value);console.log(e.target.value);
+                }}/>
+              </div>
+              <div className="me-3">
+                      價格排序:
+                <input type="checkbox" 
+                  checked={priceAscending}
+                  onChange={(e)=>setPriceAscending(e.target.checked)}
+                />
+                {priceAscending.toString()}
+              </div>
+            </div>
           </div>
           {productData.length > 0 ? (
-            <div className="row mt-5 mb-5 mx-1">
+            <div className="row mt-1 mb-1 mx-1">
               <div className="col-md-6 mb-3">
-                <div className="d-flex align-items-center">
-                  <div className="me-3">
-                      搜尋名稱:<input type="search" style={{ width: "100px" }} onChange={(e)=>{
-                      setSearch(e.target.value);console.log(e.target.value);
-                    }}/>
-                  </div>
-                  <div className="me-3">
-                      價格排序:
-                    <input type="checkbox" 
-                      checked={priceAscending}
-                      onChange={(e)=>setPriceAscending(e.target.checked)}
-                    />
-                    {priceAscending.toString()}
-                  </div>
-                </div>
-
                 <h2>產品列表,本頁產品數:{productData.length}</h2>
                 <table className="table">
                   <thead>
