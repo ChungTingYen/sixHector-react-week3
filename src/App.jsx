@@ -1,32 +1,32 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef,useMemo } from "react";
 import axios from "axios";
 import * as apiService from "./apiService/apiService";
-import { Products, ProductDetail, Modal, Loading } from "./component";
+import { Products, ProductDetail, Modal } from "./component";
 // import { productDataAtLocal } from "./productDataAtLocal";
 import { productDataAtLocal } from "./products";
 import * as utils from "./utils/utils";
-// import {
-//   getHeadersFromCookie,
-//   getProductData,
-//   deleteProductsSequentially,
-//   AddProductsSequentially,
-//   modalStatus,
-// } from "./utlis/utlis";
 
 function App() {
-  // const initRef = useRef(false);
-  // const [detailLoading, setDetailLoading] = useState("");
-
   const [productData, setProductData] = useState([]);
   const [tempProduct, setTempProduct] = useState(null);
   const [account, setAccount] = useState({
     username: "",
     password: "",
   });
+  const APIPath = import.meta.env.VITE_API_PATH;
   const AppModalRef = useRef(null);
   const [selectedRowIndex, setSelectedRowIndex] = useState(null);
-  const APIPath = import.meta.env.VITE_API_PATH;
   const [isLoggin, setIsLoggin] = useState(false);
+  const [search,setSearch] = useState('');
+  const [priceAscending,setPriceAscending] = useState(false);
+
+  const filterData = useMemo(()=>{
+    return [...productData]
+      .filter((item)=>item.title.match(search))
+      .sort((a,b)=>a.title.localeCompare(b.title))
+      .sort((a,b)=>priceAscending && (a.price - b.price));
+  },[productData,search,priceAscending]);
+
   const changeInput = (e) => {
     setAccount({
       ...account,
@@ -274,6 +274,22 @@ function App() {
           {productData.length > 0 ? (
             <div className="row mt-5 mb-5 mx-1">
               <div className="col-md-6 mb-3">
+                <div className="d-flex align-items-center">
+                  <div className="me-3">
+                      搜尋名稱:<input type="search" style={{ width: "100px" }} onChange={(e)=>{
+                      setSearch(e.target.value);console.log(e.target.value);
+                    }}/>
+                  </div>
+                  <div className="me-3">
+                      價格排序:
+                    <input type="checkbox" 
+                      checked={priceAscending}
+                      onChange={(e)=>setPriceAscending(e.target.checked)}
+                    />
+                    {priceAscending.toString()}
+                  </div>
+                </div>
+
                 <h2>產品列表,本頁產品數:{productData.length}</h2>
                 <table className="table">
                   <thead>
@@ -288,7 +304,7 @@ function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {productData.map((product, index) => {
+                    {filterData.map((product, index) => {
                       return (
                         <Products
                           key={product.id}
@@ -338,6 +354,7 @@ function App() {
                 placeholder="name@example.com"
                 name="username"
                 onChange={changeInput}
+                value={account.username}
               />
               <label htmlFor="username">Email address</label>
             </div>
@@ -349,6 +366,7 @@ function App() {
                 placeholder="Password"
                 name="password"
                 onChange={changeInput}
+                value={account.password}
               />
               <label htmlFor="password">Password</label>
             </div>
