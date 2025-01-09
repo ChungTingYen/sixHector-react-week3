@@ -260,7 +260,7 @@ function App() {
                 className="btn btn-danger me-2"
                 onClick={handleDeleteAllProducts}
               >
-                刪除全部產品
+                刪除本頁全部產品
               </button>
               <button
                 type="button"
