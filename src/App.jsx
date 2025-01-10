@@ -20,12 +20,13 @@ function App() {
   const [search,setSearch] = useState('');
   const [priceAscending,setPriceAscending] = useState(false);
   const [axiosConfig,setAxiosConfig] = useState({
-    params: { page: '',content:'' }, 
+    params: { page: 0 }, 
     headers: { Authorization: '', },
   });
   const [pages,setPages] = useState({
     currentPage:0,
-    totalPages:0
+    totalPages:0,
+    category:''
   });
   const filterData = useMemo(()=>{
     return [...productData]
@@ -147,6 +148,16 @@ function App() {
     setSelectedRowIndex("");
     try {
       const headers = utils.getHeadersFromCookie();
+      const res = await apiService.axiosGetProductData(
+        `/api/${APIPath}/admin/products`,
+        headers
+      ) || [];
+      console.log(res.data.pagination);
+      setPages({ 
+        currentPage:res.data.pagination.current_page, 
+        totalPages:res.data.pagination.total_pages ,
+        content:res.data.pagination.category
+      });
       await utils.getProductData(null, headers, setProductData);
       // alert("已重新取得商品資料");
       setTempProduct(null);
@@ -156,7 +167,33 @@ function App() {
       AppModalRef.current.close();
     }
   };
+  //下一頁資料
+  const handleGetNextPageProducts = async()=>{
+    const headers = utils.getHeadersFromCookie();
+    const  updatedConfig = 
+   { 
+     ...axiosConfig, 
+     params: 
+      { 
+        ...axiosConfig.params, 
+        page: 2, 
+        category:''
+      }, 
+     headers: headers, // 替換 headers 
+   };
+    console.log('config=',updatedConfig);
+    try {
+      const res = await apiService.axiosGetProductData2(
+        `/api/${APIPath}/admin/products`,
+        updatedConfig
+      ) || [];
+      setProductData(res.data.products);
+      console.log(res.data);
+    } catch (error) {
+      console.error(error);
+    }
 
+  };
   const onGetProduct = useCallback(
     (productId) => {
       // console.log("productId=", productId);
@@ -213,7 +250,9 @@ function App() {
     }
     // console.log("tempProduct=", tempProduct?.id);
   }, [productData]);
-
+  useEffect(()=>{
+    // console.log('pages=',pages);
+  });
   // });
   //測試用Modal
   // useEffect(() => {
@@ -266,6 +305,13 @@ function App() {
                 onClick={handleGetProducts}
               >
                 重新取得產品資料
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary me-2"
+                onClick={handleGetNextPageProducts}
+              >
+                下一頁
               </button>
               <button
                 type="button"

@@ -5,6 +5,11 @@ export const  axiosGetProductData = async(path,config)=>{
   return response;
 };
 
+export const  axiosGetProductData2 = async(path,config)=>{
+  const response = await adminInstance.get(path,  config );
+  return response;
+};
+
 export const axiosPostSignin = async(path,account) =>{
   const response = await adminInstance.post(path, account);
   return response;
