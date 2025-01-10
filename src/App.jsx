@@ -127,13 +127,14 @@ function App() {
   const handleLogout = async () => {
     try {
       const headers = utils.getHeadersFromCookie();
-      console.log('handleLogout:',headers);
+      // console.log('handleLogout:',headers);
       const res = await apiService.axiosPostLogout("/logout", headers);
       alert(res.data.success ? res.data.message : "登出失敗");
       if (res.data.success) {
         setIsLoggin(false);
         setProductData([]);
         setTempProduct(null);
+        setSelectedRowIndex(null);
       }
     } catch (error) {
       alert('error:' + error.response.data.message);
@@ -212,6 +213,7 @@ function App() {
     }
     // console.log("tempProduct=", tempProduct?.id);
   }, [productData]);
+
   // });
   //測試用Modal
   // useEffect(() => {
