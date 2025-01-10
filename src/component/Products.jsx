@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef,memo } from "react";
 // import Modal from "./Modal";
 const Product = (props) => {
   const {
@@ -53,4 +53,4 @@ const Product = (props) => {
   );
 };
 
-export default Product;
+export default memo(Product);

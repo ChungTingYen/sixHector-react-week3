@@ -19,7 +19,14 @@ function App() {
   const [isLoggin, setIsLoggin] = useState(false);
   const [search,setSearch] = useState('');
   const [priceAscending,setPriceAscending] = useState(false);
-
+  const [axiosConfig,setAxiosConfig] = useState({
+    params: { page: '',content:'' }, 
+    headers: { Authorization: '', },
+  });
+  const [pages,setPages] = useState({
+    currentPage:0,
+    totalPages:0
+  });
   const filterData = useMemo(()=>{
     return [...productData]
       .filter((item)=>item.title.match(search))
@@ -45,6 +52,7 @@ function App() {
         //執行axios.defaults.headers.common.Authorization
         axios.defaults.headers.common.Authorization = token;
         setIsLoggin(true);
+        // const config = {};
         await utils.getProductData(token, null, setProductData);
         // initRef.current = true;
       }
@@ -119,6 +127,7 @@ function App() {
   const handleLogout = async () => {
     try {
       const headers = utils.getHeadersFromCookie();
+      console.log('handleLogout:',headers);
       const res = await apiService.axiosPostLogout("/logout", headers);
       alert(res.data.success ? res.data.message : "登出失敗");
       if (res.data.success) {
@@ -127,7 +136,7 @@ function App() {
         setTempProduct(null);
       }
     } catch (error) {
-      alert(error.response.data.message);
+      alert('error:' + error.response.data.message);
       console.log(error);
     }
   };
@@ -203,6 +212,7 @@ function App() {
     }
     // console.log("tempProduct=", tempProduct?.id);
   }, [productData]);
+  // });
   //測試用Modal
   // useEffect(() => {
   //   if (detailLoading && Object.keys(tempProduct).length > 0) {
@@ -273,7 +283,7 @@ function App() {
             <div className="d-flex align-items-center mt-3">
               <div className="me-3">
                       搜尋名稱:<input type="search" style={{ width: "100px" }} onChange={(e)=>{
-                  setSearch(e.target.value);console.log(e.target.value);
+                  setSearch(e.target.value);
                 }}/>
               </div>
               <div className="me-3">
@@ -290,6 +300,7 @@ function App() {
             <div className="row mt-1 mb-1 mx-1">
               <div className="col-md-6 mb-3">
                 <h2>產品列表,本頁產品數:{productData.length}</h2>
+                {/* <p onClick={ShowNextPage}>第二頁</p> */}
                 <table className="table">
                   <thead>
                     <tr>

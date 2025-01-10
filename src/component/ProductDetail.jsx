@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useRef, useState } from "react";
+import React, { useRef, useState,memo } from "react";
 import Modal from "./Modal";
 const ProductDetail = (props) => {
   const {
@@ -12,6 +12,7 @@ const ProductDetail = (props) => {
     imagesUrl,
     category,
   } = props;
+  console.log('ProductDetail');
   const handleImageClick = (imageSrc) => {
     imgSrcRef.current.src = imageSrc;
     modalRef.current.setModalImage(imageSrc);
@@ -74,4 +75,4 @@ const ProductDetail = (props) => {
   );
 };
 
-export default ProductDetail;
+export default memo(ProductDetail);
