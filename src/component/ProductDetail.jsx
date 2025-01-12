@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
-import React, { useRef, useState,memo } from "react";
-import Modal from "./Modal";
+import React, { useRef, useState, memo } from "react";
+import Modal1 from "./ProductDetailModal";
 const ProductDetail = (props) => {
   const {
     title,
@@ -12,7 +12,7 @@ const ProductDetail = (props) => {
     imagesUrl,
     category,
   } = props;
-  console.log('ProductDetail');
+  // console.log("ProductDetail");
   const handleImageClick = (imageSrc) => {
     imgSrcRef.current.src = imageSrc;
     modalRef.current.setModalImage(imageSrc);
@@ -20,7 +20,7 @@ const ProductDetail = (props) => {
   };
   const modalRef = useRef(null);
   const imgSrcRef = useRef(null);
-  
+
   return (
     <>
       <div className="card mb-3" style={{ border: "none" }}>
@@ -28,7 +28,7 @@ const ProductDetail = (props) => {
           src={imageUrl}
           className="card-img-top primary-image"
           alt="主圖"
-          style={ { width: "90%", height: "100%",objectFit: "cover", }}
+          style={{ width: "90%", height: "100%", objectFit: "cover" }}
           ref={imgSrcRef}
         />
         <div className="card-body">
@@ -65,7 +65,7 @@ const ProductDetail = (props) => {
           </div>
         </div>
       </div>
-      <Modal
+      <Modal1
         ref={modalRef}
         modalBodyText="商品放大圖"
         modalSize={{ width: "600px", height: "600px" }}

@@ -11,9 +11,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import * as bootstrap from "bootstrap";
 
 const Modal = forwardRef((props, ref) => {
-  const { modalBodyText, modalSize, modalImgSize,xxxx } = props;
-  const modalDivRef = useRef(null);
-  const modalRef = useRef(null);
+  const { modalBodyText, modalSize, modalImgSize } = props;
+  const modalDivRef1 = useRef(null);
+  const modalRef1 = useRef(null);
   const imageRef = useRef(null);
   // const initRef = useRef(false);
   // const [imageSrc, setImageSrc] = useState("");
@@ -25,11 +25,11 @@ const Modal = forwardRef((props, ref) => {
   //   console.log('restoreStyle');
   // };
   useEffect(() => {
-    modalRef.current = new bootstrap.Modal(modalDivRef.current);
+    modalRef1.current = new bootstrap.Modal(modalDivRef1.current);
   }, []);
   //原本的寫法
   // useEffect(() => {
-  //   modalRef.current = new bootstrap.Modal(modalDivRef.current);
+  //   modalRef1.current = new bootstrap.Modal(modalDivRef1.current);
   //   if (initRef.current) {
   //     openModal();
   //     document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
@@ -42,11 +42,11 @@ const Modal = forwardRef((props, ref) => {
   //   };
   // }, [imageSrc]);
   const closeModal = () => {
-    modalRef.current.hide();
+    modalRef1.current.hide();
     // restoreStyle();
   };
   const openModal = () => {
-    modalRef.current.show();
+    modalRef1.current.show();
   };
 
   useImperativeHandle(ref, () => {
@@ -55,7 +55,7 @@ const Modal = forwardRef((props, ref) => {
       open() {
         openModal();
       },
-      close(){
+      close() {
         closeModal();
       },
       // close: closeModal,
@@ -66,27 +66,27 @@ const Modal = forwardRef((props, ref) => {
       // },
       toggleFooter(visible) {
         if (visible) {
-          modalDivRef.current.querySelector(".modal-footer").style.display =
+          modalDivRef1.current.querySelector(".modal-footer").style.display =
             "block";
         } else {
-          modalDivRef.current.querySelector(".modal-footer").style.display =
+          modalDivRef1.current.querySelector(".modal-footer").style.display =
             "none";
         }
       },
       setModalImage(src) {
-        if (imageRef.current) { 
-          imageRef.current.src = src; 
-          // 直接修改圖像的 src 屬性 
+        if (imageRef.current) {
+          imageRef.current.src = src;
+          // 直接修改圖像的 src 屬性
         }
       },
-      setImgAlt(text){
-        if (imageRef.current) { 
-          imageRef.current.alt = text; 
-          // 直接修改圖像的 alt 屬性 
+      setImgAlt(text) {
+        if (imageRef.current) {
+          imageRef.current.alt = text;
+          // 直接修改圖像的 alt 屬性
         }
       },
-      //把modalDivRef傳出去給父層控制
-      modalDivRef,
+      //把modalDivRef1傳出去給父層控制
+      modalDivRef1,
     };
   });
   return (
@@ -94,7 +94,7 @@ const Modal = forwardRef((props, ref) => {
       <div
         className="modal fade"
         id="myModal"
-        ref={modalDivRef}
+        ref={modalDivRef1}
         tabIndex="-1"
         aria-labelledby="exampleModalLabel"
         aria-hidden="true"
@@ -126,7 +126,7 @@ const Modal = forwardRef((props, ref) => {
                 // src={imageSrc}
                 ref={imageRef}
                 className="img-fluid"
-                alt=''
+                alt=""
                 style={{ maxWidth: "100%", maxHeight: "100%" }}
                 id="picture"
               />

@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useEffect, useState, useRef,memo } from "react";
+import React, { useEffect, useState, useRef, memo } from "react";
 // import Modal from "./Modal";
 const Product = (props) => {
   const {
@@ -12,6 +12,7 @@ const Product = (props) => {
     onGetProduct,
     onDeleteProduct,
     isSelected,
+    openEditMOdal,
   } = props;
   const atGetProduct = () => {
     onGetProduct(id);
@@ -19,11 +20,14 @@ const Product = (props) => {
   const atDeleteProduct = () => {
     onDeleteProduct(id);
   };
+  const atOpenEditMOdal = () => {
+    openEditMOdal(id);
+  };
   return (
     <>
       {
-        <tr className={ isSelected ? "table-info" : "" } id={id}>
-          <th scope="row" >{index} </th>
+        <tr className={isSelected ? "table-info" : ""} id={id}>
+          <th scope="row">{index} </th>
           <th scope="row">{title}</th>
           {/* <td>{title}</td> */}
           <td>{origin_price}</td>
@@ -35,7 +39,7 @@ const Product = (props) => {
               className="btn btn-primary"
               onClick={atGetProduct}
             >
-              查看細節
+              細節
             </button>
           </td>
           <td>
@@ -46,6 +50,20 @@ const Product = (props) => {
             >
               刪除
             </button>
+          </td>
+          <td>
+            <div className="btn-group">
+              <button
+                type="button"
+                className="btn btn-outline-primary btn-sm"
+                onClick={atOpenEditMOdal}
+              >
+                編輯
+              </button>
+              <button type="button" className="btn btn-outline-danger btn-sm">
+                刪除
+              </button>
+            </div>
           </td>
         </tr>
       }
