@@ -12,7 +12,7 @@ const Product = (props) => {
     onGetProduct,
     onDeleteProduct,
     isSelected,
-    openEditMOdal,
+    handleEditModal,
   } = props;
   const atGetProduct = () => {
     onGetProduct(id);
@@ -21,7 +21,7 @@ const Product = (props) => {
     onDeleteProduct(id);
   };
   const atOpenEditMOdal = () => {
-    openEditMOdal(id);
+    handleEditModal(id);
   };
   return (
     <>
