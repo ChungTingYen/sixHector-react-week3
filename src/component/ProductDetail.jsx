@@ -12,7 +12,6 @@ const ProductDetail = (props) => {
     imagesUrl,
     category,
   } = props;
-  // console.log("ProductDetail");
   const handleImageClick = (imageSrc) => {
     imgSrcRef.current.src = imageSrc;
     modalRef.current.setModalImage(imageSrc);
@@ -20,7 +19,7 @@ const ProductDetail = (props) => {
   };
   const modalRef = useRef(null);
   const imgSrcRef = useRef(null);
-
+  console.log('detail');
   return (
     <>
       <div className="card mb-3" style={{ border: "none" }}>

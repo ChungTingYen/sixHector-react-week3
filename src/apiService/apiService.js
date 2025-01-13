@@ -38,3 +38,8 @@ export const axiosDeleteProduct = async(path,config) =>{
   const response = await adminInstance.delete(path,{ headers: config });
   return response;
 };
+
+export const axiosPutProduct = async(path,putData,config)=>{
+  const response = await adminInstance.put(path,putData,{ headers: config });
+  return response;
+};
