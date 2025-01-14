@@ -12,7 +12,7 @@ const Product = (props) => {
     onGetProduct,
     onDeleteProduct,
     isSelected,
-    handleEditModal,
+    handleOpenEditModalWithValue,
   } = props;
   const atGetProduct = () => {
     onGetProduct(id);
@@ -21,7 +21,7 @@ const Product = (props) => {
     onDeleteProduct(id);
   };
   const atOpenEditMOdal = () => {
-    handleEditModal('edit',id);
+    handleOpenEditModalWithValue("edit", id);
   };
   return (
     <>
@@ -60,7 +60,11 @@ const Product = (props) => {
               >
                 編輯
               </button>
-              <button type="button" className="btn btn-outline-danger btn-sm" onClick={atDeleteProduct}>
+              <button
+                type="button"
+                className="btn btn-outline-danger btn-sm"
+                onClick={atDeleteProduct}
+              >
                 刪除
               </button>
             </div>

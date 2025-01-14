@@ -24,7 +24,7 @@ function App() {
     description: "",
     content: "",
     is_enabled: false,
-    imagesUrl: [],
+    imagesUrl: [""],
   };
   const [tempProduct, setTempProduct] = useState(null);
   const [editProduct, setEditProduct] = useState(tempProductDefaultValue);
@@ -302,15 +302,16 @@ function App() {
       new Modal(modalDivRef.current, { backdrop: false });
     }
   }, []);
-  useEffect(()=>{
-    
-    if(productDetailIdRef.current){
-      console.log('productDetailIdRef=',productDetailIdRef.current);
-      const temp = productData.find((item)=>item.id === productDetailIdRef.current);
+  useEffect(() => {
+    if (productDetailIdRef.current) {
+      console.log("productDetailIdRef=", productDetailIdRef.current);
+      const temp = productData.find(
+        (item) => item.id === productDetailIdRef.current
+      );
       setTempProduct(temp);
       productDetailIdRef.current = null;
     }
-  },[productDetailIdRef,productData]);
+  }, [productDetailIdRef, productData]);
   //測試用Modal
   // useEffect(() => {
   //   if (detailLoading && Object.keys(tempProduct).length > 0) {
@@ -320,11 +321,11 @@ function App() {
   //     return () => clearTimeout(timeId);
   //   }
   // }, [detailLoading]);
-  const [modalMode,setModalMode] = useState(null);
-  const [tempImgsUrl,setTempImgsUrl] = useState('');
-  const changePutProductData = (e,index = null) => {
+  const [modalMode, setModalMode] = useState(null);
+  const [tempImgsUrl, setTempImgsUrl] = useState("");
+  const handleEditDataChange = (e, index = null) => {
     const { name, type, value, checked } = e.target;
-    console.log('index=',index);
+    console.log("index=", index);
     let tempValue;
     if (type === "number") tempValue = Number(value);
     else if (type === "checkbox") tempValue = checked;
@@ -336,13 +337,13 @@ function App() {
     // console.log("temp=", temp);
     setEditProduct(temp);
   };
-  const handleEditModal = useCallback(
-    (mode,productId = null) => {
-      console.log("handleEditModal,mode,productId=", mode,productId);
+  const handleOpenEditModalWithValue = useCallback(
+    (mode, productId = null) => {
+      console.log("handleEditModal,mode,productId=", mode, productId);
       if (mode === "create") {
         setEditProduct(tempProductDefaultValue);
         setModalMode(mode);
-      } else if (productId && mode === 'edit') {
+      } else if (productId && mode === "edit") {
         const { imagesUrl = [], ...rest } =
           productData.find((product) => product.id === productId) || {};
         const updatedProduct = {
@@ -359,50 +360,42 @@ function App() {
     [productData]
   );
   const openEditModal = () => {
-    console.log("openEditModal,mode=",modalMode);
+    console.log("openEditModal,mode=", modalMode);
     const modalInstance = Modal.getInstance(modalDivRef.current);
     modalInstance.show();
   };
   const closeEditModal = () => {
     setModalMode(null);
-    console.log("closeEditModal=",modalMode);
+    console.log("closeEditModal=", modalMode);
     const modalInstance = Modal.getInstance(modalDivRef.current);
     modalInstance.hide();
   };
-  const implementEditProduct = async (type,editProduct)=>{
+  const implementEditProduct = async (type, editProduct) => {
     try {
       const headers = utils.getHeadersFromCookie();
-  
+
       // const wrapData = { data: { ...editProduct,imagesUrl:[] } };
-      const wrapData = { data:  editProduct };
+      const wrapData = { data: editProduct };
       // console.log(editProduct);
       // console.log(wrapData);
-      let path = '';
+      let path = "";
       let res = null;
       switch (type) {
-      case 'create':
-        path = `/api/${APIPath}/admin/product`;
-        res = await apiService.axiosPostAddProduct(
-          path,
-          wrapData,
-          headers
-        );
-        break;
-      case 'edit':
-        path = `/api/${APIPath}/admin/product/${editProduct.id}`;
-        res = await apiService.axiosPutProduct(
-          path,
-          wrapData,
-          headers
-        );
-        break;
-      default:
-        break;
+        case "create":
+          path = `/api/${APIPath}/admin/product`;
+          res = await apiService.axiosPostAddProduct(path, wrapData, headers);
+          break;
+        case "edit":
+          path = `/api/${APIPath}/admin/product/${editProduct.id}`;
+          res = await apiService.axiosPutProduct(path, wrapData, headers);
+          break;
+        default:
+          break;
       }
       if (res.data.success) {
         await utils.getProductData(null, headers, setProductData);
       }
-      return (res.data.success ? res.data.message : "失敗");
+      return res.data.success ? res.data.message : "失敗";
     } catch (error) {
       console.log(error);
       return error;
@@ -411,33 +404,53 @@ function App() {
 
   const handleEditProduct = async () => {
     console.log(editProduct.id);
-    console.log('modalMode=',modalMode);
-    modalStatus(AppModalRef, modalMode === 'create' ? '新增中' : '更新中', null, false);
-    if (!editProduct.id && modalMode === 'edit') {
+    console.log("modalMode=", modalMode);
+    modalStatus(
+      AppModalRef,
+      modalMode === "create" ? "新增中" : "更新中",
+      null,
+      false
+    );
+    if (!editProduct.id && modalMode === "edit") {
       alert("未取得product ID");
       AppModalRef.current.close();
       return;
     }
     try {
-      const res = await implementEditProduct(modalMode,editProduct);
+      const res = await implementEditProduct(modalMode, editProduct);
       alert(res);
     } catch (error) {
-      alert('執行失敗' + error);
+      alert("執行失敗" + error);
     }
     AppModalRef.current.close();
     closeEditModal();
-   
   };
-  const deleteImagesUrl = (imgUrlIndex)=>{
-    const temp = editProduct.imagesUrl.filter((item,index)=>index != imgUrlIndex);
-    setEditProduct((prev)=>({ ...prev,imagesUrl:temp }));
+  const deleteImagesUrl = (imgUrlIndex) => {
+    const temp = editProduct.imagesUrl.filter(
+      (item, index) => index != imgUrlIndex
+    );
+    setEditProduct((prev) => ({ ...prev, imagesUrl: temp }));
   };
-  const addImagesUrl = ()=>{
+  const addImagesUrl = (e) => {
+    const { value } = e.target;
+    if (value.length < 1) {
+      alert("副圖網址小於1");
+      return;
+    }
+
     const temp = editProduct.imagesUrl.concat(tempImgsUrl);
-    setEditProduct((prev)=>({ ...prev,imagesUrl:temp }));
-    setTempImgsUrl('');
+    setEditProduct((prev) => ({ ...prev, imagesUrl: temp }));
+    setTempImgsUrl("");
     // console.log(tempImgsUrl);
   };
+  const handleImgsUrlChange = (e, index) => {
+    const { value } = e.target;
+    const newImageUrl = [...editProduct.imagesUrl];
+    newImageUrl[index] = value;
+    // console.log(newImageUrl);
+    setEditProduct((prev) => ({ ...prev, imagesUrl: newImageUrl }));
+  };
+
   return (
     <>
       {/* <pre>{JSON.stringify(productData, null, 2)}</pre> */}
@@ -449,7 +462,7 @@ function App() {
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => handleEditModal("create")}
+                onClick={() => handleOpenEditModalWithValue("create")}
               >
                 建立新的產品
               </button>
@@ -555,7 +568,9 @@ function App() {
                           onGetProduct={onGetProduct}
                           onDeleteProduct={onDeleteProduct}
                           isSelected={product.id === selectedRowIndex}
-                          handleEditModal={handleEditModal}
+                          handleOpenEditModalWithValue={
+                            handleOpenEditModalWithValue
+                          }
                         />
                       );
                     })}
@@ -639,9 +654,7 @@ function App() {
           <div className="modal-dialog modal-dialog-centered modal-xl">
             <div className="modal-content border-0 shadow">
               <div className="modal-header border-bottom">
-                <h5 className="modal-title fs-4">
-                  {editProduct.title}
-                </h5>
+                <h5 className="modal-title fs-4">{editProduct.title}</h5>
                 {/* X 按鈕 */}
                 <button
                   type="button"
@@ -667,7 +680,7 @@ function App() {
                           className="form-control"
                           placeholder="請輸入圖片連結"
                           value={editProduct.imageUrl}
-                          onChange={changePutProductData}
+                          onChange={handleEditDataChange}
                         />
                       </div>
                       <img
@@ -693,7 +706,7 @@ function App() {
                             placeholder={`圖片網址 ${index + 1}`}
                             className="form-control mb-2"
                             value={image}
-                            onChange={(e)=>changePutProductData(e,index)}
+                            onChange={(e) => handleImgsUrlChange(e, index)}
                             name={`imagesUrl-${index + 1}`}
                           />
                           {image && (
@@ -703,7 +716,7 @@ function App() {
                               className="img-fluid mb-2"
                             />
                           )}
-                          { index > 0 && 
+                          {index > 0 && (
                             <button
                               type="button"
                               className="btn btn-danger w-100"
@@ -711,27 +724,32 @@ function App() {
                             >
                               刪除
                             </button>
-                          }
-                          <hr/>
+                          )}
+                          <hr />
                         </div>
-                        
                       ))}
-                      {editProduct.imagesUrl.length < 5 ? (
+                      {editProduct.imagesUrl.length < 5 &&
+                      editProduct.imagesUrl[editProduct.imagesUrl.length - 1] !=
+                        "" ? (
                         <>
                           <input
                             type="text"
-                            placeholder='圖片網址'
+                            placeholder="圖片網址"
                             className="form-control mb-2"
                             value={tempImgsUrl}
-                            onChange={(e)=>setTempImgsUrl(e.target.value)}
+                            onChange={(e) => setTempImgsUrl(e.target.value)}
                           />
                           <button
                             type="button"
                             className="btn btn-primary w-100"
                             onClick={addImagesUrl}
                           >
-                        新增副圖
-                          </button></>) : <></>}
+                            新增副圖
+                          </button>
+                        </>
+                      ) : (
+                        <></>
+                      )}
                     </div>
                   </div>
 
@@ -747,7 +765,7 @@ function App() {
                         className="form-control"
                         placeholder="請輸入標題"
                         value={editProduct.title}
-                        onChange={changePutProductData}
+                        onChange={handleEditDataChange}
                       />
                     </div>
 
@@ -762,7 +780,7 @@ function App() {
                         className="form-control"
                         placeholder="請輸入分類"
                         value={editProduct.category}
-                        onChange={changePutProductData}
+                        onChange={handleEditDataChange}
                       />
                     </div>
 
@@ -777,7 +795,7 @@ function App() {
                         className="form-control"
                         placeholder="請輸入單位"
                         value={editProduct.unit}
-                        onChange={changePutProductData}
+                        onChange={handleEditDataChange}
                       />
                     </div>
 
@@ -793,7 +811,7 @@ function App() {
                           className="form-control"
                           placeholder="請輸入原價"
                           value={editProduct.origin_price}
-                          onChange={changePutProductData}
+                          onChange={handleEditDataChange}
                         />
                       </div>
                       <div className="col-6">
@@ -807,7 +825,7 @@ function App() {
                           className="form-control"
                           placeholder="請輸入售價"
                           value={editProduct.price}
-                          onChange={changePutProductData}
+                          onChange={handleEditDataChange}
                         />
                       </div>
                     </div>
@@ -823,7 +841,7 @@ function App() {
                         rows={4}
                         placeholder="請輸入產品描述"
                         value={editProduct.description}
-                        onChange={changePutProductData}
+                        onChange={handleEditDataChange}
                       ></textarea>
                     </div>
 
@@ -838,7 +856,7 @@ function App() {
                         rows={4}
                         placeholder="請輸入說明內容"
                         value={editProduct.content}
-                        onChange={changePutProductData}
+                        onChange={handleEditDataChange}
                       ></textarea>
                     </div>
 
@@ -849,7 +867,7 @@ function App() {
                         className="form-check-input"
                         id="isEnabled"
                         checked={editProduct.is_enabled}
-                        onChange={changePutProductData}
+                        onChange={handleEditDataChange}
                       />
                       <label className="form-check-label" htmlFor="isEnabled">
                         是否啟用
