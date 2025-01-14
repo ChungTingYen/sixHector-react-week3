@@ -38,7 +38,7 @@ function App() {
 
   const modalRef = useRef(null);
   const modalDivRef = useRef(null);
-
+  const productDetailIdRef = useRef(null);
   //測試功能 start
   const AppModalRef = useRef(null);
   const [selectedRowIndex, setSelectedRowIndex] = useState(null);
@@ -156,6 +156,7 @@ function App() {
     await utils.getProductData(null, headers, setProductData);
     setTempProduct(null);
     if (results.length > 0) alert(results.join(","));
+    AppModalRef.current.close();
   };
   //刪除當頁全部產品
   const handleDeleteAllProducts = async () => {
@@ -167,6 +168,7 @@ function App() {
       await utils.getProductData(null, headers, setProductData);
       setTempProduct(null);
       if (results.length > 0) alert(results.join(","));
+      AppModalRef.current.close();
     }
   };
   // 登出
@@ -205,13 +207,12 @@ function App() {
         content: res.data.pagination.category,
       });
       await utils.getProductData(null, headers, setProductData);
-      // alert("已重新取得商品資料");
       setTempProduct(null);
     } catch (error) {
       alert(error.response.data.message);
       console.log(error);
-      AppModalRef.current.close();
     }
+    AppModalRef.current.close();
   };
   //下一頁資料
   const handleGetNextPageProducts = async () => {
@@ -241,6 +242,7 @@ function App() {
   const onGetProduct = useCallback(
     (productId) => {
       console.log("onGetProduct");
+      productDetailIdRef.current = productId;
       if (tempProduct?.id === productId) {
         // 當前選擇的產品與上一次相同，不進行任何操作
         console.log("產品ID相同，不重複打開模態框");
@@ -276,8 +278,8 @@ function App() {
       } catch (error) {
         console.error("刪除產品時發生錯誤：", error);
         alert("刪除產品時發生錯誤：", error);
-        AppModalRef.current.close();
       }
+      AppModalRef.current.close();
     },
     [tempProduct]
   );
@@ -287,24 +289,28 @@ function App() {
     AppModalRef.current.toggleFooter(toggleFooter);
     AppModalRef.current.open();
   };
+  // forwardRef AppModal
   useEffect(() => {
     if (AppModalRef.current) {
-      AppModalRef.current.close();
+      // AppModalRef.current.close();
       console.log("useEffect AppModalRef.current.close();");
     }
   }, [productData]);
-  // Modal.getInstance
+  // new Modal
   useEffect(() => {
-    // console.log(Modal.getInstance(modalDivRef.current));
     if (modalDivRef.current) {
       new Modal(modalDivRef.current, { backdrop: false });
     }
   }, []);
-
-  // useEffect(() => {
-  //   console.log(tempProduct);
-  // }, [tempProduct]);
-  // });
+  useEffect(()=>{
+    
+    if(productDetailIdRef.current){
+      console.log('productDetailIdRef=',productDetailIdRef.current);
+      const temp = productData.find((item)=>item.id === productDetailIdRef.current);
+      setTempProduct(temp);
+      productDetailIdRef.current = null;
+    }
+  },[productDetailIdRef,productData]);
   //測試用Modal
   // useEffect(() => {
   //   if (detailLoading && Object.keys(tempProduct).length > 0) {
@@ -314,76 +320,11 @@ function App() {
   //     return () => clearTimeout(timeId);
   //   }
   // }, [detailLoading]);
-  const handleEditModal = useCallback(
-    (productId) => {
-      console.log("handleEditModal,productId=", productId);
-      const modalInstance = Modal.getInstance(modalDivRef.current);
-      if (productId === "create") {
-        setEditProduct(tempProductDefaultValue);
-      } else if (productId) {
-        const { imagesUrl = [], ...rest } =
-          productData.find((product) => product.id === productId) || {};
-        const updatedProduct = {
-          ...rest,
-          imagesUrl: imagesUrl.filter(Boolean),
-        };
-        //imagesUrl.filter(Boolean) 是用來過濾掉 imagesUrl 數組中所有虛值的簡潔語法
-        // （如 null、undefined、0、false、NaN 或空字符串）。
-        // console.log(productId);
-        setEditProduct(updatedProduct);
-      }
-      openEditModal();
-    },
-    [productData]
-  );
-  const openEditModal = () => {
-    console.log("openEditModal");
-    const modalInstance = Modal.getInstance(modalDivRef.current);
-    modalInstance.show();
-  };
-  const closeEditModal = () => {
-    // if (modalRef.current) {
-    //   // 確認 modalRef.current 存在
-    //   modalRef.current.hide();
-    //   console.log("closeEditModal");
-    // }
-    console.log("closeEditModal");
-    const modalInstance = Modal.getInstance(modalDivRef.current);
-    modalInstance.hide();
-  };
-
-  const handlePutProduct = async () => {
-    console.log(editProduct.id);
-    if (!editProduct.id) {
-      alert("未取得product ID");
-      return;
-    }
-
-    try {
-      const headers = utils.getHeadersFromCookie();
-      const putData = { data: editProduct };
-      const detailProductId = editProduct.id;
-      const res = await apiService.axiosPutProduct(
-        `/api/${APIPath}/admin/product/${detailProductId}`,
-        putData,
-        headers
-      );
-      alert(res.data.success ? res.data.message : "失敗");
-      if (res.data.success) {
-        await utils.getProductData(null, headers, setProductData);
-        // setEditProduct(tempProductDefaultValue);
-        // closeEditModal();
-        // const newTempProduct = { ...productData.find((item) => item.id === detailProductId) };
-        // setTempProduct(newTempProduct);
-        setTempProduct(null);
-      }
-    } catch (error) {
-      alert(error);
-      console.log(error);
-    }
-  };
-  const changePutProductData = (e) => {
+  const [modalMode,setModalMode] = useState(null);
+  const [tempImgsUrl,setTempImgsUrl] = useState('');
+  const changePutProductData = (e,index = null) => {
     const { name, type, value, checked } = e.target;
+    console.log('index=',index);
     let tempValue;
     if (type === "number") tempValue = Number(value);
     else if (type === "checkbox") tempValue = checked;
@@ -395,14 +336,115 @@ function App() {
     // console.log("temp=", temp);
     setEditProduct(temp);
   };
+  const handleEditModal = useCallback(
+    (mode,productId = null) => {
+      console.log("handleEditModal,mode,productId=", mode,productId);
+      if (mode === "create") {
+        setEditProduct(tempProductDefaultValue);
+        setModalMode(mode);
+      } else if (productId && mode === 'edit') {
+        const { imagesUrl = [], ...rest } =
+          productData.find((product) => product.id === productId) || {};
+        const updatedProduct = {
+          ...rest,
+          imagesUrl: imagesUrl.filter(Boolean),
+        };
+        //imagesUrl.filter(Boolean) 是用來過濾掉 imagesUrl 數組中所有虛值的簡潔語法
+        // （如 null、undefined、0、false、NaN 或空字符串）。
+        setEditProduct(updatedProduct);
+        setModalMode(mode);
+      }
+      openEditModal();
+    },
+    [productData]
+  );
+  const openEditModal = () => {
+    console.log("openEditModal,mode=",modalMode);
+    const modalInstance = Modal.getInstance(modalDivRef.current);
+    modalInstance.show();
+  };
+  const closeEditModal = () => {
+    setModalMode(null);
+    console.log("closeEditModal=",modalMode);
+    const modalInstance = Modal.getInstance(modalDivRef.current);
+    modalInstance.hide();
+  };
+  const implementEditProduct = async (type,editProduct)=>{
+    try {
+      const headers = utils.getHeadersFromCookie();
+  
+      // const wrapData = { data: { ...editProduct,imagesUrl:[] } };
+      const wrapData = { data:  editProduct };
+      // console.log(editProduct);
+      // console.log(wrapData);
+      let path = '';
+      let res = null;
+      switch (type) {
+      case 'create':
+        path = `/api/${APIPath}/admin/product`;
+        res = await apiService.axiosPostAddProduct(
+          path,
+          wrapData,
+          headers
+        );
+        break;
+      case 'edit':
+        path = `/api/${APIPath}/admin/product/${editProduct.id}`;
+        res = await apiService.axiosPutProduct(
+          path,
+          wrapData,
+          headers
+        );
+        break;
+      default:
+        break;
+      }
+      if (res.data.success) {
+        await utils.getProductData(null, headers, setProductData);
+      }
+      return (res.data.success ? res.data.message : "失敗");
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  };
+
+  const handleEditProduct = async () => {
+    console.log(editProduct.id);
+    console.log('modalMode=',modalMode);
+    modalStatus(AppModalRef, modalMode === 'create' ? '新增中' : '更新中', null, false);
+    if (!editProduct.id && modalMode === 'edit') {
+      alert("未取得product ID");
+      AppModalRef.current.close();
+      return;
+    }
+    try {
+      const res = await implementEditProduct(modalMode,editProduct);
+      alert(res);
+    } catch (error) {
+      alert('執行失敗' + error);
+    }
+    AppModalRef.current.close();
+    closeEditModal();
+   
+  };
+  const deleteImagesUrl = (imgUrlIndex)=>{
+    const temp = editProduct.imagesUrl.filter((item,index)=>index != imgUrlIndex);
+    setEditProduct((prev)=>({ ...prev,imagesUrl:temp }));
+  };
+  const addImagesUrl = ()=>{
+    const temp = editProduct.imagesUrl.concat(tempImgsUrl);
+    setEditProduct((prev)=>({ ...prev,imagesUrl:temp }));
+    setTempImgsUrl('');
+    // console.log(tempImgsUrl);
+  };
   return (
     <>
       {/* <pre>{JSON.stringify(productData, null, 2)}</pre> */}
       {isLoggin ? (
         <>
-          {/* )} */}
           <div className="row mt-5 mb-3 mx-3">
-            <div className="d-flex  justify-content-between">
+            <div className="d-flex justify-content-between mb-3 ">
               <p className="text-secondary">Logging</p>
               <button
                 type="button"
@@ -578,25 +620,27 @@ function App() {
           <p className="mt-5 mb-3 text-muted">&copy; 2024~∞ - 六角學院</p>
         </div>
       )}
+
+      {/* detail Modal */}
       <ProductDetailModal
         ref={AppModalRef}
         modalBodyText="訊息"
         modalSize={{ width: "200px", height: "200px" }}
         modalImgSize={{ width: "200px", height: "120px" }}
       />
-      {/* {tempProduct && ( */}
+      {/* edit Modal */}
       <>
         <div
           id="productModal"
           className="modal fade"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1050 }}
           ref={modalDivRef}
         >
           <div className="modal-dialog modal-dialog-centered modal-xl">
             <div className="modal-content border-0 shadow">
               <div className="modal-header border-bottom">
                 <h5 className="modal-title fs-4">
-                  {editProduct.title ? "更新產品" : "新增產品"}
+                  {editProduct.title}
                 </h5>
                 {/* X 按鈕 */}
                 <button
@@ -649,7 +693,8 @@ function App() {
                             placeholder={`圖片網址 ${index + 1}`}
                             className="form-control mb-2"
                             value={image}
-                            onChange={(e) => console.log(e.target.value)}
+                            onChange={(e)=>changePutProductData(e,index)}
+                            name={`imagesUrl-${index + 1}`}
                           />
                           {image && (
                             <img
@@ -658,8 +703,35 @@ function App() {
                               className="img-fluid mb-2"
                             />
                           )}
+                          { index > 0 && 
+                            <button
+                              type="button"
+                              className="btn btn-danger w-100"
+                              onClick={() => deleteImagesUrl(index)}
+                            >
+                              刪除
+                            </button>
+                          }
+                          <hr/>
                         </div>
+                        
                       ))}
+                      {editProduct.imagesUrl.length < 5 ? (
+                        <>
+                          <input
+                            type="text"
+                            placeholder='圖片網址'
+                            className="form-control mb-2"
+                            value={tempImgsUrl}
+                            onChange={(e)=>setTempImgsUrl(e.target.value)}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-primary w-100"
+                            onClick={addImagesUrl}
+                          >
+                        新增副圖
+                          </button></>) : <></>}
                     </div>
                   </div>
 
@@ -799,7 +871,7 @@ function App() {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={handlePutProduct}
+                  onClick={handleEditProduct}
                 >
                   確認
                 </button>

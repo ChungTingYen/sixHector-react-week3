@@ -98,6 +98,7 @@ const Modal = forwardRef((props, ref) => {
         tabIndex="-1"
         aria-labelledby="exampleModalLabel"
         aria-hidden="true"
+        style={{ zIndex: 1060 }}
       >
         <div
           className="modal-dialog"

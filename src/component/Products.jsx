@@ -21,7 +21,7 @@ const Product = (props) => {
     onDeleteProduct(id);
   };
   const atOpenEditMOdal = () => {
-    handleEditModal(id);
+    handleEditModal('edit',id);
   };
   return (
     <>
@@ -60,7 +60,7 @@ const Product = (props) => {
               >
                 編輯
               </button>
-              <button type="button" className="btn btn-outline-danger btn-sm">
+              <button type="button" className="btn btn-outline-danger btn-sm" onClick={atDeleteProduct}>
                 刪除
               </button>
             </div>
