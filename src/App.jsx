@@ -50,7 +50,7 @@ function App() {
   //   headers: { Authorization: "" },
   // });
   const axiosConfigRef = useRef({
-    params: { page: 0,category:'' },
+    params: { page: 0, category: "" },
     headers: { Authorization: "" },
   });
   // const [pages, setPages] = useState({
@@ -91,13 +91,14 @@ function App() {
         document.cookie = `hexToken=${token}; expires=${new Date(expired)}`;
         //執行axios.defaults.headers.common.Authorization
         axios.defaults.headers.common.Authorization = token;
+        const headers = {
+          Authorization: token,
+        };
         setIsLoggin(true);
-        // const config = {};
-        await utils.getProductData(token, null, setProductData,pagesRef);
-        // initRef.current = true;
+        utils.getProductData(headers, setProductData, pagesRef);
       }
     } catch (error) {
-      alert('error:',error);
+      alert("error:", error);
       console.log(error);
     }
   };
@@ -124,14 +125,12 @@ function App() {
   const handleCheckLogin2 = async () => {
     try {
       const headers = utils.getHeadersFromCookie();
-      const res = await apiService.axiosPostCheckSingin(
-        "/api/user/check",
-        headers
-      );
+      await apiService.axiosPostCheckSingin("/api/user/check", headers);
+      setIsLoggin(true);
+      utils.getProductData(headers, setProductData, pagesRef);
       // alert(res.data.success ? "已登入成功" : "請重新登入");
-      return res.data.success;
     } catch (error) {
-      alert(error.response.data.message);
+      alert("error:", error?.response.data.message || error);
       console.log(error);
     }
   };
@@ -151,7 +150,7 @@ function App() {
       );
       alert(resProduct.data.success ? resProduct.data.message : "新增商品失敗");
       if (resProduct.data.success) {
-        await utils.getProductData(null, headers, setProductData,pagesRef);
+        await utils.getProductData(headers, setProductData, pagesRef);
       }
     } catch (error) {
       alert(error.response.data.message);
@@ -164,7 +163,7 @@ function App() {
     const headers = utils.getHeadersFromCookie();
     const results =
       (await utils.AddProductsSequentially(productDataAtLocal)) || [];
-    await utils.getProductData(null, headers, setProductData,pagesRef);
+    await utils.getProductData(headers, setProductData, pagesRef);
     setTempProduct(null);
     if (results.length > 0) alert(results.join(","));
     AppModalRef.current.close();
@@ -176,7 +175,7 @@ function App() {
       const headers = utils.getHeadersFromCookie();
       const results =
         (await utils.deleteProductsSequentially(productData)) || [];
-      await utils.getProductData(null, headers, setProductData,pagesRef);
+      await utils.getProductData(headers, setProductData, pagesRef);
       setTempProduct(null);
       if (results.length > 0) alert(results.join(","));
       AppModalRef.current.close();
@@ -206,26 +205,29 @@ function App() {
     setSelectedRowIndex("");
     try {
       const headers = utils.getHeadersFromCookie();
-      await utils.getProductData(null, headers, setProductData,pagesRef);
+      await utils.getProductData(headers, setProductData, pagesRef);
       setTempProduct(null);
     } catch (error) {
-      alert('error:',error);
+      alert("error:", error);
       console.log(error);
     }
     AppModalRef.current.close();
   };
   //下一頁資料
 
-  const getDownPageProducts = async ()=>{
-    if(pagesRef.current.current_page >= pagesRef.current.total_pages ){
+  const getDownPageProducts = async () => {
+    if (pagesRef.current.current_page >= pagesRef.current.total_pages) {
       alert(`已經是最後一頁`);
       return;
     }
     const headers = utils.getHeadersFromCookie();
     axiosConfigRef.current = {
       params: {
-        page: pagesRef.current.current_page < pagesRef.current.total_pages ? pagesRef.current.current_page + 1 : pagesRef.current.total_pages,
-        category: pagesRef.category || ''
+        page:
+          pagesRef.current.current_page < pagesRef.current.total_pages
+            ? pagesRef.current.current_page + 1
+            : pagesRef.current.total_pages,
+        category: pagesRef.category || "",
       },
       headers: headers, // 替換 headers
     };
@@ -241,22 +243,22 @@ function App() {
       pagesRef.current = {
         current_page: current_page || 0,
         total_pages: total_pages || 0,
-        category: category || '', 
+        category: category || "",
       };
     } catch (error) {
       console.error(error);
     }
   };
-  const getUpPageProducts = async ()=>{
-    if(pagesRef.current.current_page <= 1 ){
+  const getUpPageProducts = async () => {
+    if (pagesRef.current.current_page <= 1) {
       alert(`已經是第一頁`);
       return;
     }
     const headers = utils.getHeadersFromCookie();
     axiosConfigRef.current = {
       params: {
-        page: pagesRef.current.current_page - 1 ,
-        category: pagesRef.category || ''
+        page: pagesRef.current.current_page - 1,
+        category: pagesRef.category || "",
       },
       headers: headers, // 替換 headers
     };
@@ -271,15 +273,16 @@ function App() {
       pagesRef.current = {
         current_page: current_page || 0,
         total_pages: total_pages || 0,
-        category: category || '', 
+        category: category || "",
       };
     } catch (error) {
       console.error(error);
     }
   };
   const handleGetUpDownPageProducts = async (type) => {
-    try{
-      const implementApI = type === 'up' ? getUpPageProducts : getDownPageProducts;
+    try {
+      const implementApI =
+        type === "up" ? getUpPageProducts : getDownPageProducts;
       await implementApI();
     } catch (error) {
       console.error(error);
@@ -318,23 +321,23 @@ function App() {
           headers
         );
         axiosConfigRef.current = {
-          params:{
-            page:pagesRef.current.current_page,
-            category:pagesRef.current.category
+          params: {
+            page: pagesRef.current.current_page,
+            category: pagesRef.current.category,
           },
-          headers:headers 
+          headers: headers,
         };
         const res =
-            (await apiService.axiosGetProductData2(
-              `/api/${APIPath}/admin/products`,
-              axiosConfigRef.current
-            )) || [];
+          (await apiService.axiosGetProductData2(
+            `/api/${APIPath}/admin/products`,
+            axiosConfigRef.current
+          )) || [];
         const { current_page, total_pages, category } = res.data.pagination;
         setProductData(res.data.products);
         pagesRef.current = {
           current_page: current_page,
           total_pages: total_pages,
-          category: category || '', 
+          category: category || "",
         };
         if (tempProduct?.id === productId) {
           setTempProduct(null);
@@ -351,10 +354,13 @@ function App() {
     AppModalRef.current.setImgAlt(imgAlt);
     AppModalRef.current.setModalImage(modalImg);
     AppModalRef.current.toggleFooter(toggleFooter);
-    setTimeout(()=>{
-      AppModalRef.current.open(),300;
+    setTimeout(() => {
+      AppModalRef.current.open(), 300;
     });
   };
+  useEffect(() => {
+    handleCheckLogin2();
+  }, []);
   //use forwardRef AppModal
   // useEffect(() => {
   //   if (AppModalRef.current) {
@@ -376,7 +382,7 @@ function App() {
   //   }
   // }, [detailLoading]);
 
-  //------------------------------第三周----------------------------- 
+  //------------------------------第三周-----------------------------
   // new Modal
   useEffect(() => {
     if (modalDivRef.current) {
@@ -440,62 +446,61 @@ function App() {
   const implementEditProduct = async (type, editProduct) => {
     try {
       const headers = utils.getHeadersFromCookie();
-      const wrapData = { 
-        data: { 
+      const wrapData = {
+        data: {
           ...editProduct,
-          is_enabled:editProduct.is_enabled ? 1 : 0 ,
+          is_enabled: editProduct.is_enabled ? 1 : 0,
           //price,original_price在取得輸入資料時handleEditDataChange已處理過
-        } 
+        },
       };
       let path = "";
       let res = null;
       switch (type) {
-      case "create":
-        path = `/api/${APIPath}/admin/product`;
-        res = await apiService.axiosPostAddProduct(path, wrapData, headers);
-        break;
-      case "edit":
-        path = `/api/${APIPath}/admin/product/${editProduct.id}`;
-        res = await apiService.axiosPutProduct(path, wrapData, headers);
-        break;
-      default:
-        break;
+        case "create":
+          path = `/api/${APIPath}/admin/product`;
+          res = await apiService.axiosPostAddProduct(path, wrapData, headers);
+          break;
+        case "edit":
+          path = `/api/${APIPath}/admin/product/${editProduct.id}`;
+          res = await apiService.axiosPutProduct(path, wrapData, headers);
+          break;
+        default:
+          break;
       }
     } catch (error) {
       console.log(error);
-      alert('上傳失敗');
+      alert("上傳失敗");
     }
   };
   //助教寫法 start
-  const createProduct = async()=>{
+  const createProduct = async () => {
     try {
       const headers = utils.getHeadersFromCookie();
-      const wrapData = { 
-        data: { 
+      const wrapData = {
+        data: {
           ...editProduct,
-          is_enabled:editProduct.is_enabled ? 1 : 0 ,
+          is_enabled: editProduct.is_enabled ? 1 : 0,
           //price,original_price在取得輸入資料時handleEditDataChange已處理過
-        } 
+        },
       };
       let path = "";
       // const res = null;
       path = `/api/${APIPath}/admin/product`;
       const res = await apiService.axiosPostAddProduct(path, wrapData, headers);
       alert(res.data.success ? res.data.message : "create 失敗");
-      
     } catch (error) {
       alert(error);
     }
   };
-  const updateProduct = async()=>{
+  const updateProduct = async () => {
     try {
       const headers = utils.getHeadersFromCookie();
-      const wrapData = { 
-        data: { 
+      const wrapData = {
+        data: {
           ...editProduct,
-          is_enabled:editProduct.is_enabled ? 1 : 0 ,
+          is_enabled: editProduct.is_enabled ? 1 : 0,
           //price,original_price在取得輸入資料時handleEditDataChange已處理過
-        } 
+        },
       };
       let path = "";
       path = `/api/${APIPath}/admin/product/${editProduct.id}`;
@@ -507,11 +512,7 @@ function App() {
   };
   //助教寫法 end
   const handleUpdateProduct = async () => {
-    modalStatus(
-      modalMode === "create" ? "新增中" : "更新中",
-      null,
-      false
-    );
+    modalStatus(modalMode === "create" ? "新增中" : "更新中", null, false);
     if (!editProduct.id && modalMode === "edit") {
       alert("未取得product ID");
       AppModalRef.current.close();
@@ -520,11 +521,11 @@ function App() {
     try {
       const headers = utils.getHeadersFromCookie();
       await implementEditProduct(modalMode, editProduct);
-      await utils.getProductData(null, headers, setProductData,pagesRef);
+      await utils.getProductData(headers, setProductData, pagesRef);
       setEditProduct(tempProductDefaultValue);
-      alert( modalMode === "create" ? "新增完成" : "更新完成");
+      alert(modalMode === "create" ? "新增完成" : "更新完成");
     } catch (error) {
-      alert( modalMode === "create" ? "新增失敗:" : "更新失敗:" + error);
+      alert(modalMode === "create" ? "新增失敗:" : "更新失敗:" + error);
     }
     AppModalRef.current.close();
     closeEditModal();
@@ -536,7 +537,7 @@ function App() {
   };
   const handleAddImage = () => {
     const newImageUrl = [...editProduct.imagesUrl];
-    newImageUrl.push('');
+    newImageUrl.push("");
     setEditProduct((prev) => ({ ...prev, imagesUrl: newImageUrl }));
   };
   const handleImgsUrlChange = (e, index) => {
@@ -595,7 +596,7 @@ function App() {
                 type="button"
                 className="btn btn-secondary me-2"
                 // onClick={handleGetNextPageProducts}
-                onClick={()=>handleGetUpDownPageProducts('up')}
+                onClick={() => handleGetUpDownPageProducts("up")}
               >
                 上一頁
               </button>
@@ -603,7 +604,7 @@ function App() {
                 type="button"
                 className="btn btn-secondary me-2"
                 // onClick={handleGetNextPageProducts}
-                onClick={()=>handleGetUpDownPageProducts('down')}
+                onClick={() => handleGetUpDownPageProducts("down")}
               >
                 下一頁
               </button>
@@ -647,7 +648,11 @@ function App() {
           {productData.length > 0 ? (
             <>
               <div className="row mt-1 mb-1 mx-1">
-                <h1>本頁產品數:{productData.length}, {pagesRef.current.current_page}/{pagesRef.current.total_pages} 頁 </h1>
+                <h1>
+                  本頁產品數:{productData.length},{" "}
+                  {pagesRef.current.current_page}/{pagesRef.current.total_pages}{" "}
+                  頁{" "}
+                </h1>
               </div>
               <div className="row mt-1 mb-1 mx-1">
                 <div className="col-md-6 mb-1 mr-3">
@@ -657,10 +662,10 @@ function App() {
                     <thead>
                       <tr>
                         <th style={{ width: "10%" }}>index</th>
-                        <th style={{ width: "25%" }}>產品名稱</th>
+                        <th style={{ width: "15%" }}>產品名稱</th>
                         <th>原價</th>
                         <th>售價</th>
-                        <th>啟用</th>
+                        <th style={{ width: "10%" }}>啟用</th>
                         <th style={{ width: "10%" }}>細節</th>
                         <th style={{ width: "10%" }}>刪除</th>
                         <th style={{ width: "20%" }}>功能</th>
@@ -824,19 +829,31 @@ function App() {
                               alt={`副圖 ${index + 1}`}
                               className="img-fluid mb-2"
                             />
-                          )}<hr />
+                          )}
+                          <hr />
                         </div>
                       ))}
 
                       <div className="btn-group w-100">
                         {editProduct.imagesUrl.length < 5 &&
-                          editProduct.imagesUrl[editProduct.imagesUrl.length - 1] !=
-                        "" && ( <button className="btn btn-outline-primary btn-sm w-100" 
-                          onClick={(e) => handleAddImage(e.target.value)}>新增圖片</button>
+                          editProduct.imagesUrl[
+                            editProduct.imagesUrl.length - 1
+                          ] != "" && (
+                            <button
+                              className="btn btn-outline-primary btn-sm w-100"
+                              onClick={(e) => handleAddImage(e.target.value)}
+                            >
+                              新增圖片
+                            </button>
+                          )}
+                        {editProduct.imagesUrl.length > 1 && (
+                          <button
+                            className="btn btn-outline-danger btn-sm w-100"
+                            onClick={(e) => handleRemoveImage(e.target.value)}
+                          >
+                            取消圖片
+                          </button>
                         )}
-                        {editProduct.imagesUrl.length > 1 &&
-                        (<button className="btn btn-outline-danger btn-sm w-100" 
-                          onClick={(e) => handleRemoveImage(e.target.value)}>取消圖片</button>)}
                       </div>
                     </div>
                   </div>

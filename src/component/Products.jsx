@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState, useRef, memo } from "react";
 // import Modal from "./Modal";
+
 const Product = (props) => {
   const {
     index,
@@ -32,7 +33,11 @@ const Product = (props) => {
           {/* <td>{title}</td> */}
           <td>{origin_price}</td>
           <td>{price}</td>
-          <td>{is_enabled ? "Y" : "N"}</td>
+          <td>
+            <span className={!is_enabled ? "text-danger fw-bold fs-4" : ""}>
+              {is_enabled ? "Y" : "N"}
+            </span>
+          </td>
           <td>
             <button
               type="button"

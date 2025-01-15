@@ -15,12 +15,7 @@ export const getHeadersFromCookie = ()=>{
   return headers;
 };
 
-export const getProductData = async (token,headers,setProductData,pagesRef)=>{
-  if(token){
-    headers = {
-      Authorization: token,
-    };
-  }
+export const getProductData = async (headers,setProductData,pagesRef)=>{
   try {
     // axios.defaults.headers.common.Authorization = token;
     const resProduct = await apiService.axiosGetProductData(
@@ -30,12 +25,6 @@ export const getProductData = async (token,headers,setProductData,pagesRef)=>{
     setProductData(resProduct.data.products);
     const { current_page, total_pages, category } = resProduct.data.pagination;
     const categoryValue = category || '';
-    // console.log(current_page,total_pages,categoryValue );
-    // setPages({
-    //   current_page: current_page || 0,
-    //   total_pages: total_pages || 0,
-    //   category: categoryValue
-    // });
     pagesRef.current = {
       current_page: current_page || 0,
       total_pages: total_pages || 0,
