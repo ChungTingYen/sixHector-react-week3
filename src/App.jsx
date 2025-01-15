@@ -160,7 +160,7 @@ function App() {
   };
   //上傳全部內建資料產品
   const handleAddAllProducts = async () => {
-    modalStatus(AppModalRef, "上傳中", null, false);
+    modalStatus("上傳中", null, false);
     const headers = utils.getHeadersFromCookie();
     const results =
       (await utils.AddProductsSequentially(productDataAtLocal)) || [];
@@ -171,7 +171,7 @@ function App() {
   };
   //刪除當頁全部產品
   const handleDeleteAllProducts = async () => {
-    modalStatus(AppModalRef, "刪除中", null, false);
+    modalStatus("刪除中", null, false);
     if (productData.length > 0) {
       const headers = utils.getHeadersFromCookie();
       const results =
@@ -202,7 +202,7 @@ function App() {
   };
   //重新取得產品資料
   const handleGetProducts = async () => {
-    modalStatus(AppModalRef, "載入中", null, false);
+    modalStatus("載入中", null, false);
     setSelectedRowIndex("");
     try {
       const headers = utils.getHeadersFromCookie();
@@ -310,7 +310,7 @@ function App() {
   );
   const onDeleteProduct = useCallback(
     async (productId) => {
-      modalStatus(AppModalRef, "刪除中", null, false);
+      modalStatus("刪除中", null, false);
       const headers = utils.getHeadersFromCookie();
       try {
         await apiService.axiosDeleteProduct(
@@ -508,7 +508,6 @@ function App() {
   //助教寫法 end
   const handleUpdateProduct = async () => {
     modalStatus(
-      AppModalRef,
       modalMode === "create" ? "新增中" : "更新中",
       null,
       false
