@@ -45,15 +45,26 @@ function App() {
   const [search, setSearch] = useState("");
 
   const [priceAscending, setPriceAscending] = useState(false);
-  const [axiosConfig, setAxiosConfig] = useState({
-    params: { page: 0 },
+  // const [axiosConfig, setAxiosConfig] = useState({
+  //   params: { page: 0,category:'' },
+  //   headers: { Authorization: "" },
+  // });
+  const axiosConfigRef = useRef({
+    params: { page: 0,category:'' },
     headers: { Authorization: "" },
   });
-  const [pages, setPages] = useState({
-    currentPage: 0,
-    totalPages: 0,
+  // const [pages, setPages] = useState({
+  //   current_page: 0,
+  //   total_pages: 0,
+  //   category: "",
+  // });
+
+  const pagesRef = useRef({
+    current_page: 0,
+    total_pages: 0,
     category: "",
   });
+
   //測試功能 end
 
   const filterData = useMemo(() => {
@@ -82,11 +93,11 @@ function App() {
         axios.defaults.headers.common.Authorization = token;
         setIsLoggin(true);
         // const config = {};
-        await utils.getProductData(token, null, setProductData);
+        await utils.getProductData(token, null, setProductData,pagesRef);
         // initRef.current = true;
       }
     } catch (error) {
-      alert(error.response.data.message);
+      alert('error:',error);
       console.log(error);
     }
   };
@@ -140,7 +151,7 @@ function App() {
       );
       alert(resProduct.data.success ? resProduct.data.message : "新增商品失敗");
       if (resProduct.data.success) {
-        await utils.getProductData(null, headers, setProductData);
+        await utils.getProductData(null, headers, setProductData,pagesRef);
       }
     } catch (error) {
       alert(error.response.data.message);
@@ -153,7 +164,7 @@ function App() {
     const headers = utils.getHeadersFromCookie();
     const results =
       (await utils.AddProductsSequentially(productDataAtLocal)) || [];
-    await utils.getProductData(null, headers, setProductData);
+    await utils.getProductData(null, headers, setProductData,pagesRef);
     setTempProduct(null);
     if (results.length > 0) alert(results.join(","));
     AppModalRef.current.close();
@@ -165,7 +176,7 @@ function App() {
       const headers = utils.getHeadersFromCookie();
       const results =
         (await utils.deleteProductsSequentially(productData)) || [];
-      await utils.getProductData(null, headers, setProductData);
+      await utils.getProductData(null, headers, setProductData,pagesRef);
       setTempProduct(null);
       if (results.length > 0) alert(results.join(","));
       AppModalRef.current.close();
@@ -195,53 +206,88 @@ function App() {
     setSelectedRowIndex("");
     try {
       const headers = utils.getHeadersFromCookie();
-      const res =
-        (await apiService.axiosGetProductData(
-          `/api/${APIPath}/admin/products`,
-          headers
-        )) || [];
-      console.log(res.data.pagination);
-      setPages({
-        currentPage: res.data.pagination.current_page,
-        totalPages: res.data.pagination.total_pages,
-        content: res.data.pagination.category,
-      });
-      await utils.getProductData(null, headers, setProductData);
+      await utils.getProductData(null, headers, setProductData,pagesRef);
       setTempProduct(null);
     } catch (error) {
-      alert(error.response.data.message);
+      alert('error:',error);
       console.log(error);
     }
     AppModalRef.current.close();
   };
   //下一頁資料
-  const handleGetNextPageProducts = async () => {
+
+  const getDownPageProducts = async ()=>{
+    if(pagesRef.current.current_page >= pagesRef.current.total_pages ){
+      alert(`已經是最後一頁`);
+      return;
+    }
     const headers = utils.getHeadersFromCookie();
-    const updatedConfig = {
-      ...axiosConfig,
+    axiosConfigRef.current = {
       params: {
-        ...axiosConfig.params,
-        page: 2,
-        category: "",
+        page: pagesRef.current.current_page < pagesRef.current.total_pages ? pagesRef.current.current_page + 1 : pagesRef.current.total_pages,
+        category: pagesRef.category || ''
       },
       headers: headers, // 替換 headers
     };
-    console.log("config=", updatedConfig);
+
     try {
       const res =
         (await apiService.axiosGetProductData2(
           `/api/${APIPath}/admin/products`,
-          updatedConfig
+          axiosConfigRef.current
         )) || [];
+      const { current_page, total_pages, category } = res.data.pagination;
       setProductData(res.data.products);
-      console.log(res.data);
+      pagesRef.current = {
+        current_page: current_page || 0,
+        total_pages: total_pages || 0,
+        category: category || '', 
+      };
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const getUpPageProducts = async ()=>{
+    if(pagesRef.current.current_page <= 1 ){
+      alert(`已經是第一頁`);
+      return;
+    }
+    const headers = utils.getHeadersFromCookie();
+    axiosConfigRef.current = {
+      params: {
+        page: pagesRef.current.current_page - 1 ,
+        category: pagesRef.category || ''
+      },
+      headers: headers, // 替換 headers
+    };
+    try {
+      const res =
+        (await apiService.axiosGetProductData2(
+          `/api/${APIPath}/admin/products`,
+          axiosConfigRef.current
+        )) || [];
+      const { current_page, total_pages, category } = res.data.pagination;
+      setProductData(res.data.products);
+      pagesRef.current = {
+        current_page: current_page || 0,
+        total_pages: total_pages || 0,
+        category: category || '', 
+      };
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const handleGetUpDownPageProducts = async (type) => {
+    try{
+      const implementApI = type === 'up' ? getUpPageProducts : getDownPageProducts;
+      await implementApI();
     } catch (error) {
       console.error(error);
     }
   };
   const onGetProduct = useCallback(
     (productId) => {
-      console.log("onGetProduct");
+      // console.log("onGetProduct");
       productDetailIdRef.current = productId;
       if (tempProduct?.id === productId) {
         // 當前選擇的產品與上一次相同，不進行任何操作
@@ -264,14 +310,32 @@ function App() {
   );
   const onDeleteProduct = useCallback(
     async (productId) => {
+      modalStatus(AppModalRef, "刪除中", null, false);
       const headers = utils.getHeadersFromCookie();
       try {
-        modalStatus(AppModalRef, "刪除中", null, false);
-        const res = await apiService.axiosDeleteProduct(
+        await apiService.axiosDeleteProduct(
           `/api/${APIPath}/admin/product/${productId}`,
           headers
         );
-        await utils.getProductData(null, headers, setProductData);
+        axiosConfigRef.current = {
+          params:{
+            page:pagesRef.current.current_page,
+            category:pagesRef.current.category
+          },
+          headers:headers 
+        };
+        const res =
+            (await apiService.axiosGetProductData2(
+              `/api/${APIPath}/admin/products`,
+              axiosConfigRef.current
+            )) || [];
+        const { current_page, total_pages, category } = res.data.pagination;
+        setProductData(res.data.products);
+        pagesRef.current = {
+          current_page: current_page,
+          total_pages: total_pages,
+          category: category || '', 
+        };
         if (tempProduct?.id === productId) {
           setTempProduct(null);
         }
@@ -287,31 +351,21 @@ function App() {
     AppModalRef.current.setImgAlt(imgAlt);
     AppModalRef.current.setModalImage(modalImg);
     AppModalRef.current.toggleFooter(toggleFooter);
-    AppModalRef.current.open();
+    setTimeout(()=>{
+      AppModalRef.current.open(),300;
+    });
   };
-  // forwardRef AppModal
-  useEffect(() => {
-    if (AppModalRef.current) {
-      // AppModalRef.current.close();
-      console.log("useEffect AppModalRef.current.close();");
-    }
-  }, [productData]);
-  // new Modal
-  useEffect(() => {
-    if (modalDivRef.current) {
-      new Modal(modalDivRef.current, { backdrop: false });
-    }
-  }, []);
-  useEffect(() => {
-    if (productDetailIdRef.current) {
-      console.log("productDetailIdRef=", productDetailIdRef.current);
-      const temp = productData.find(
-        (item) => item.id === productDetailIdRef.current
-      );
-      setTempProduct(temp);
-      productDetailIdRef.current = null;
-    }
-  }, [productDetailIdRef, productData]);
+  //use forwardRef AppModal
+  // useEffect(() => {
+  //   if (AppModalRef.current) {
+  //     // AppModalRef.current.close();
+  //     console.log("useEffect AppModalRef.current.close();");
+  //   }
+  // }, [productData]);
+  // useEffect(()=>{
+  //   console.log('pagesRef=',pagesRef.current);
+  // },[pagesRef.current]);
+  
   //測試用Modal
   // useEffect(() => {
   //   if (detailLoading && Object.keys(tempProduct).length > 0) {
@@ -321,11 +375,27 @@ function App() {
   //     return () => clearTimeout(timeId);
   //   }
   // }, [detailLoading]);
+
+  //------------------------------第三周----------------------------- 
+  // new Modal
+  useEffect(() => {
+    if (modalDivRef.current) {
+      new Modal(modalDivRef.current, { backdrop: false });
+    }
+  }, []);
+  useEffect(() => {
+    if (productDetailIdRef.current) {
+      // console.log("productDetailIdRef=", productDetailIdRef.current);
+      const temp = productData.find(
+        (item) => item.id === productDetailIdRef.current
+      );
+      setTempProduct(temp);
+      productDetailIdRef.current = null;
+    }
+  }, [productDetailIdRef, productData]);
   const [modalMode, setModalMode] = useState(null);
-  const [tempImgsUrl, setTempImgsUrl] = useState("");
-  const handleEditDataChange = (e, index = null) => {
+  const handleEditDataChange = (e) => {
     const { name, type, value, checked } = e.target;
-    console.log("index=", index);
     let tempValue;
     if (type === "number") tempValue = Number(value);
     else if (type === "checkbox") tempValue = checked;
@@ -334,12 +404,11 @@ function App() {
       ...editProduct,
       [name]: tempValue,
     };
-    // console.log("temp=", temp);
     setEditProduct(temp);
   };
   const handleOpenEditModalWithValue = useCallback(
     (mode, productId = null) => {
-      console.log("handleEditModal,mode,productId=", mode, productId);
+      // console.log("handleEditModal,mode,productId=", mode, productId);
       if (mode === "create") {
         setEditProduct(tempProductDefaultValue);
         setModalMode(mode);
@@ -360,51 +429,84 @@ function App() {
     [productData]
   );
   const openEditModal = () => {
-    console.log("openEditModal,mode=", modalMode);
     const modalInstance = Modal.getInstance(modalDivRef.current);
     modalInstance.show();
   };
   const closeEditModal = () => {
     setModalMode(null);
-    console.log("closeEditModal=", modalMode);
     const modalInstance = Modal.getInstance(modalDivRef.current);
     modalInstance.hide();
   };
   const implementEditProduct = async (type, editProduct) => {
     try {
       const headers = utils.getHeadersFromCookie();
-
-      // const wrapData = { data: { ...editProduct,imagesUrl:[] } };
-      const wrapData = { data: editProduct };
-      // console.log(editProduct);
-      // console.log(wrapData);
+      const wrapData = { 
+        data: { 
+          ...editProduct,
+          is_enabled:editProduct.is_enabled ? 1 : 0 ,
+          //price,original_price在取得輸入資料時handleEditDataChange已處理過
+        } 
+      };
       let path = "";
       let res = null;
       switch (type) {
-        case "create":
-          path = `/api/${APIPath}/admin/product`;
-          res = await apiService.axiosPostAddProduct(path, wrapData, headers);
-          break;
-        case "edit":
-          path = `/api/${APIPath}/admin/product/${editProduct.id}`;
-          res = await apiService.axiosPutProduct(path, wrapData, headers);
-          break;
-        default:
-          break;
+      case "create":
+        path = `/api/${APIPath}/admin/product`;
+        res = await apiService.axiosPostAddProduct(path, wrapData, headers);
+        break;
+      case "edit":
+        path = `/api/${APIPath}/admin/product/${editProduct.id}`;
+        res = await apiService.axiosPutProduct(path, wrapData, headers);
+        break;
+      default:
+        break;
       }
-      if (res.data.success) {
-        await utils.getProductData(null, headers, setProductData);
-      }
-      return res.data.success ? res.data.message : "失敗";
     } catch (error) {
       console.log(error);
-      return error;
+      alert('上傳失敗');
     }
   };
-
-  const handleEditProduct = async () => {
-    console.log(editProduct.id);
-    console.log("modalMode=", modalMode);
+  //助教寫法 start
+  const createProduct = async()=>{
+    try {
+      const headers = utils.getHeadersFromCookie();
+      const wrapData = { 
+        data: { 
+          ...editProduct,
+          is_enabled:editProduct.is_enabled ? 1 : 0 ,
+          //price,original_price在取得輸入資料時handleEditDataChange已處理過
+        } 
+      };
+      let path = "";
+      // const res = null;
+      path = `/api/${APIPath}/admin/product`;
+      const res = await apiService.axiosPostAddProduct(path, wrapData, headers);
+      alert(res.data.success ? res.data.message : "create 失敗");
+      
+    } catch (error) {
+      alert(error);
+    }
+  };
+  const updateProduct = async()=>{
+    try {
+      const headers = utils.getHeadersFromCookie();
+      const wrapData = { 
+        data: { 
+          ...editProduct,
+          is_enabled:editProduct.is_enabled ? 1 : 0 ,
+          //price,original_price在取得輸入資料時handleEditDataChange已處理過
+        } 
+      };
+      let path = "";
+      path = `/api/${APIPath}/admin/product/${editProduct.id}`;
+      const res = await apiService.axiosPostAddProduct(path, wrapData, headers);
+      alert(res.data.success ? res.data.message : "create 失敗");
+    } catch (error) {
+      alert(error);
+    }
+  };
+  //助教寫法 end
+  const handleUpdateProduct = async () => {
     modalStatus(
       AppModalRef,
       modalMode === "create" ? "新增中" : "更新中",
@@ -417,37 +519,31 @@ function App() {
       return;
     }
     try {
-      const res = await implementEditProduct(modalMode, editProduct);
-      alert(res);
+      const headers = utils.getHeadersFromCookie();
+      await implementEditProduct(modalMode, editProduct);
+      await utils.getProductData(null, headers, setProductData,pagesRef);
+      setEditProduct(tempProductDefaultValue);
+      alert( modalMode === "create" ? "新增完成" : "更新完成");
     } catch (error) {
-      alert("執行失敗" + error);
+      alert( modalMode === "create" ? "新增失敗:" : "更新失敗:" + error);
     }
     AppModalRef.current.close();
     closeEditModal();
   };
-  const deleteImagesUrl = (imgUrlIndex) => {
-    const temp = editProduct.imagesUrl.filter(
-      (item, index) => index != imgUrlIndex
-    );
-    setEditProduct((prev) => ({ ...prev, imagesUrl: temp }));
+  const handleRemoveImage = () => {
+    const newImageUrl = [...editProduct.imagesUrl];
+    newImageUrl.pop();
+    setEditProduct((prev) => ({ ...prev, imagesUrl: newImageUrl }));
   };
-  const addImagesUrl = (e) => {
-    const { value } = e.target;
-    if (value.length < 1) {
-      alert("副圖網址小於1");
-      return;
-    }
-
-    const temp = editProduct.imagesUrl.concat(tempImgsUrl);
-    setEditProduct((prev) => ({ ...prev, imagesUrl: temp }));
-    setTempImgsUrl("");
-    // console.log(tempImgsUrl);
+  const handleAddImage = () => {
+    const newImageUrl = [...editProduct.imagesUrl];
+    newImageUrl.push('');
+    setEditProduct((prev) => ({ ...prev, imagesUrl: newImageUrl }));
   };
   const handleImgsUrlChange = (e, index) => {
     const { value } = e.target;
     const newImageUrl = [...editProduct.imagesUrl];
     newImageUrl[index] = value;
-    // console.log(newImageUrl);
     setEditProduct((prev) => ({ ...prev, imagesUrl: newImageUrl }));
   };
 
@@ -499,7 +595,16 @@ function App() {
               <button
                 type="button"
                 className="btn btn-secondary me-2"
-                onClick={handleGetNextPageProducts}
+                // onClick={handleGetNextPageProducts}
+                onClick={()=>handleGetUpDownPageProducts('up')}
+              >
+                上一頁
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary me-2"
+                // onClick={handleGetNextPageProducts}
+                onClick={()=>handleGetUpDownPageProducts('down')}
               >
                 下一頁
               </button>
@@ -541,61 +646,66 @@ function App() {
             </div>
           </div>
           {productData.length > 0 ? (
-            <div className="row mt-1 mb-1 mx-1">
-              <div className="col-md-6 mb-3">
-                <h2>產品列表,本頁產品數:{productData.length}</h2>
-                {/* <p onClick={ShowNextPage}>第二頁</p> */}
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: "10%" }}>index</th>
-                      <th style={{ width: "25%" }}>產品名稱</th>
-                      <th>原價</th>
-                      <th>售價</th>
-                      <th>啟用</th>
-                      <th style={{ width: "10%" }}>細節</th>
-                      <th style={{ width: "10%" }}>刪除</th>
-                      <th style={{ width: "20%" }}>功能</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filterData.map((product, index) => {
-                      return (
-                        <Products
-                          key={product.id}
-                          {...product}
-                          index={index}
-                          onGetProduct={onGetProduct}
-                          onDeleteProduct={onDeleteProduct}
-                          isSelected={product.id === selectedRowIndex}
-                          handleOpenEditModalWithValue={
-                            handleOpenEditModalWithValue
-                          }
-                        />
-                      );
-                    })}
-                  </tbody>
-                </table>
+            <>
+              <div className="row mt-1 mb-1 mx-1">
+                <h1>本頁產品數:{productData.length}, {pagesRef.current.current_page}/{pagesRef.current.total_pages} 頁 </h1>
               </div>
-              <div className="col-md-6">
-                <h2>單一產品細節</h2>
-                {tempProduct ? (
-                  <ProductDetail
-                    title={tempProduct.title}
-                    imageUrl={tempProduct.imageUrl}
-                    setImgAlt={tempProduct.setImgAlt}
-                    description={tempProduct.description}
-                    content={tempProduct.content}
-                    origin_price={tempProduct.origin_price}
-                    price={tempProduct.price}
-                    imagesUrl={tempProduct.imagesUrl}
-                    category={tempProduct.category}
-                  />
-                ) : (
-                  <p className="text-secondary">請選擇一個商品查看</p>
-                )}
+              <div className="row mt-1 mb-1 mx-1">
+                <div className="col-md-6 mb-1 mr-3">
+                  <h3>產品列表</h3>
+                  {/* <p onClick={ShowNextPage}>第二頁</p> */}
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "10%" }}>index</th>
+                        <th style={{ width: "25%" }}>產品名稱</th>
+                        <th>原價</th>
+                        <th>售價</th>
+                        <th>啟用</th>
+                        <th style={{ width: "10%" }}>細節</th>
+                        <th style={{ width: "10%" }}>刪除</th>
+                        <th style={{ width: "20%" }}>功能</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filterData.map((product, index) => {
+                        return (
+                          <Products
+                            key={product.id}
+                            {...product}
+                            index={index}
+                            onGetProduct={onGetProduct}
+                            onDeleteProduct={onDeleteProduct}
+                            isSelected={product.id === selectedRowIndex}
+                            handleOpenEditModalWithValue={
+                              handleOpenEditModalWithValue
+                            }
+                          />
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="col-md-6 mb-1">
+                  <h2>單一產品細節</h2>
+                  {tempProduct ? (
+                    <ProductDetail
+                      title={tempProduct.title}
+                      imageUrl={tempProduct.imageUrl}
+                      setImgAlt={tempProduct.setImgAlt}
+                      description={tempProduct.description}
+                      content={tempProduct.content}
+                      origin_price={tempProduct.origin_price}
+                      price={tempProduct.price}
+                      imagesUrl={tempProduct.imagesUrl}
+                      category={tempProduct.category}
+                    />
+                  ) : (
+                    <p className="text-secondary">請選擇一個商品查看</p>
+                  )}
+                </div>
               </div>
-            </div>
+            </>
           ) : (
             <h1>沒有商品或商品載入中</h1>
           )}
@@ -715,41 +825,20 @@ function App() {
                               alt={`副圖 ${index + 1}`}
                               className="img-fluid mb-2"
                             />
-                          )}
-                          {index > 0 && (
-                            <button
-                              type="button"
-                              className="btn btn-danger w-100"
-                              onClick={() => deleteImagesUrl(index)}
-                            >
-                              刪除
-                            </button>
-                          )}
-                          <hr />
+                          )}<hr />
                         </div>
                       ))}
-                      {editProduct.imagesUrl.length < 5 &&
-                      editProduct.imagesUrl[editProduct.imagesUrl.length - 1] !=
-                        "" ? (
-                        <>
-                          <input
-                            type="text"
-                            placeholder="圖片網址"
-                            className="form-control mb-2"
-                            value={tempImgsUrl}
-                            onChange={(e) => setTempImgsUrl(e.target.value)}
-                          />
-                          <button
-                            type="button"
-                            className="btn btn-primary w-100"
-                            onClick={addImagesUrl}
-                          >
-                            新增副圖
-                          </button>
-                        </>
-                      ) : (
-                        <></>
-                      )}
+
+                      <div className="btn-group w-100">
+                        {editProduct.imagesUrl.length < 5 &&
+                          editProduct.imagesUrl[editProduct.imagesUrl.length - 1] !=
+                        "" && ( <button className="btn btn-outline-primary btn-sm w-100" 
+                          onClick={(e) => handleAddImage(e.target.value)}>新增圖片</button>
+                        )}
+                        {editProduct.imagesUrl.length > 1 &&
+                        (<button className="btn btn-outline-danger btn-sm w-100" 
+                          onClick={(e) => handleRemoveImage(e.target.value)}>取消圖片</button>)}
+                      </div>
                     </div>
                   </div>
 
@@ -889,7 +978,7 @@ function App() {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={handleEditProduct}
+                  onClick={handleUpdateProduct}
                 >
                   確認
                 </button>

@@ -15,7 +15,7 @@ export const getHeadersFromCookie = ()=>{
   return headers;
 };
 
-export const getProductData = async (token,headers,setProductData)=>{
+export const getProductData = async (token,headers,setProductData,pagesRef)=>{
   if(token){
     headers = {
       Authorization: token,
@@ -28,11 +28,42 @@ export const getProductData = async (token,headers,setProductData)=>{
       headers
     ) || [];
     setProductData(resProduct.data.products);
+    const { current_page, total_pages, category } = resProduct.data.pagination;
+    const categoryValue = category || '';
+    // console.log(current_page,total_pages,categoryValue );
+    // setPages({
+    //   current_page: current_page || 0,
+    //   total_pages: total_pages || 0,
+    //   category: categoryValue
+    // });
+    pagesRef.current = {
+      current_page: current_page || 0,
+      total_pages: total_pages || 0,
+      category: categoryValue
+    };
   } catch (error) {
     alert(error.response.data.message);
     console.log(error);
   }
 };
+// export const getProductData = async (token,headers,setProductData)=>{
+//   if(token){
+//     headers = {
+//       Authorization: token,
+//     };
+//   }
+//   try {
+//     // axios.defaults.headers.common.Authorization = token;
+//     const resProduct = await apiService.axiosGetProductData(
+//       `/api/${APIPath}/admin/products`,
+//       headers
+//     ) || [];
+//     setProductData(resProduct.data.products);
+//   } catch (error) {
+//     alert(error.response.data.message);
+//     console.log(error);
+//   }
+// };
 
 export async function deleteProductsSequentially(productData) { 
   const results = []; 
@@ -73,10 +104,3 @@ export async function AddProductsSequentially(productData) {
     } 
   } return results; 
 }
-
-export const modalStatus = (imgAlt,modalImg,toggleFooter,)=>{
-  AppModalRef.current.setImgAlt(imgAlt);
-  AppModalRef.current.setModalImage(modalImg);
-  AppModalRef.current.toggleFooter(toggleFooter);
-  AppModalRef.current.open();
-};
