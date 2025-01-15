@@ -347,7 +347,7 @@ function App() {
     },
     [tempProduct]
   );
-  const modalStatus = (AppModalRef, imgAlt, modalImg, toggleFooter) => {
+  const modalStatus = (imgAlt, modalImg, toggleFooter) => {
     AppModalRef.current.setImgAlt(imgAlt);
     AppModalRef.current.setModalImage(modalImg);
     AppModalRef.current.toggleFooter(toggleFooter);
@@ -365,7 +365,7 @@ function App() {
   // useEffect(()=>{
   //   console.log('pagesRef=',pagesRef.current);
   // },[pagesRef.current]);
-  
+
   //測試用Modal
   // useEffect(() => {
   //   if (detailLoading && Object.keys(tempProduct).length > 0) {
