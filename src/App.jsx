@@ -521,7 +521,6 @@ function App() {
     openDeleteModal();
   },[productData]);
   const deleteProductInModal = async()=>{
-    // console.log(editProduct);
     modalStatus("刪除中", null, false);
     const headers = utils.getHeadersFromCookie();
     try {
@@ -535,7 +534,12 @@ function App() {
           `/api/${APIPath}/admin/products`,
           axiosConfigRef.current);
       const { current_page, total_pages, category } = res.data.pagination;
+      if (tempProduct.id === editProduct.id) {
+        setTempProduct(null);
+      }
       setProductData(res.data.products);
+      setEditProduct(tempProductDefaultValue);
+      setModalMode(null);
       utils.setPagesRef(pagesRef,{ current_page, total_pages, category });
       alert('刪除產品完成');
     } catch (error) {
@@ -911,6 +915,7 @@ function App() {
                         type="number"
                         className="form-control"
                         placeholder="請輸入原價"
+                        min={0}
                         value={editProduct.origin_price}
                         onChange={handleEditDataChange}
                       />
@@ -925,6 +930,7 @@ function App() {
                         type="number"
                         className="form-control"
                         placeholder="請輸入售價"
+                        min={0}
                         value={editProduct.price}
                         onChange={handleEditDataChange}
                       />
