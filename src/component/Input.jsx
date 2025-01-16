@@ -4,7 +4,7 @@ const Input = (props)=>{
   const { name,type,id,className,placeholder,value,handleEditDataChange } = props;
 
   const xx = (e)=>{
-    console.log(e.target);
+    // console.log(e.target);
     handleEditDataChange(e);
   };
   

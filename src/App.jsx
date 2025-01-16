@@ -92,8 +92,6 @@ function App() {
   const handleCheckLogin = async () => {
     try {
       const headers = utils.getHeadersFromCookie();
-      //調用common.Authorization
-      // const res = await axios.post("https://ec-course-api.hexschool.io" + "/api/user/check",{});
       const res = await apiService.axiosPostCheckSingin(
         "/api/user/check",
         headers
@@ -500,12 +498,13 @@ function App() {
     newImageUrl.push("");
     setEditProduct((prev) => ({ ...prev, imagesUrl: newImageUrl }));
   };
-  const handleImgsUrlChange = (e, index) => {
+  const handleImgsUrlChange = useCallback((e, index) => {
+    console.log(e.target);
     const { value } = e.target;
     const newImageUrl = [...editProduct.imagesUrl];
     newImageUrl[index] = value;
     setEditProduct((prev) => ({ ...prev, imagesUrl: newImageUrl }));
-  };
+  },[editProduct]);
   const openDeleteModal = ()=>{
     const modalInstance = Modal.getInstance(deleteModalDivRef.current);
     modalInstance.show();
@@ -833,6 +832,15 @@ function App() {
                           onChange={(e) => handleImgsUrlChange(e, index)}
                           name={`imagesUrl-${index + 1}`}
                         />
+                        <Input
+                          id={`imagesUrl-${index + 1}`}
+                          type="text"
+                          placeholder={`圖片網址 ${index + 1}`}
+                          className="form-control mb-2"
+                          value={image}
+                          handleEditDataChange={(e) => handleImgsUrlChange(e, index)}
+                          name={`imagesUrl-${index + 1}`}                   
+                        ></Input>
                         {image && (
                           <img
                             src={image}
