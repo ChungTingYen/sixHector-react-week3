@@ -5,7 +5,7 @@ import {
   Products,
   ProductDetail,
   ProductDetailModal,
-  Input
+  Input,
   // ProductEditModal,
 } from "./component";
 // import { productDataAtLocal } from "./productDataAtLocal";
@@ -14,6 +14,7 @@ import * as utils from "./utils/utils";
 import { Modal } from "bootstrap";
 function App() {
   const [productData, setProductData] = useState([]);
+  const [headers, setHeaders] = useState(null);
   //先給初始值，以免出現controll 跟 uncontroll的狀況
   const tempProductDefaultValue = {
     imageUrl: "",
@@ -65,7 +66,9 @@ function App() {
       [e.target.name]: e.target.value,
     });
   };
-
+  useEffect(() => {
+    console.log("headers:", headers);
+  });
   //登入
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -77,11 +80,12 @@ function App() {
         document.cookie = `hexToken=${token}; expires=${new Date(expired)}`;
         //執行axios.defaults.headers.common.Authorization
         axios.defaults.headers.common.Authorization = token;
-        const headers = {
+        const nowHeaders = {
           Authorization: token,
         };
         setIsLoggin(true);
-        utils.getProductData(headers, setProductData, pagesRef);
+        setHeaders(nowHeaders);
+        utils.getProductData(nowHeaders, setProductData, pagesRef);
       }
     } catch (error) {
       alert("error:", error);
@@ -91,7 +95,7 @@ function App() {
   //檢查登入狀態
   const handleCheckLogin = async () => {
     try {
-      const headers = utils.getHeadersFromCookie();
+      // const headers = utils.getHeadersFromCookie();
       const res = await apiService.axiosPostCheckSingin(
         "/api/user/check",
         headers
@@ -103,8 +107,9 @@ function App() {
     }
   };
   const handleCheckLogin2 = async () => {
+    if (headers === null) return;
     try {
-      const headers = utils.getHeadersFromCookie();
+      // const headers = utils.getHeadersFromCookie();
       await apiService.axiosPostCheckSingin("/api/user/check", headers);
       setIsLoggin(true);
       utils.getProductData(headers, setProductData, pagesRef);
@@ -122,7 +127,7 @@ function App() {
     };
     setTempProduct(null);
     try {
-      const headers = utils.getHeadersFromCookie();
+      // const headers = utils.getHeadersFromCookie();
       const resProduct = await apiService.axiosPostAddProduct(
         `/api/${APIPath}/admin/product`,
         wrapData,
@@ -140,9 +145,8 @@ function App() {
   //上傳全部內建資料產品
   const handleAddAllProducts = async () => {
     modalStatus("上傳中", null, false);
-    const headers = utils.getHeadersFromCookie();
-    const results =
-      await utils.AddProductsSequentially(productDataAtLocal);
+    // const headers = utils.getHeadersFromCookie();
+    const results = await utils.AddProductsSequentially(productDataAtLocal);
     utils.getProductData(headers, setProductData, pagesRef);
     setTempProduct(null);
     if (results.length > 0) alert(results.join(","));
@@ -152,9 +156,8 @@ function App() {
   const handleDeleteAllProducts = async () => {
     modalStatus("刪除中", null, false);
     if (productData.length > 0) {
-      const headers = utils.getHeadersFromCookie();
-      const results =
-        await utils.deleteProductsSequentially(productData);
+      // const headers = utils.getHeadersFromCookie();
+      const results = await utils.deleteProductsSequentially(productData);
       utils.getProductData(headers, setProductData, pagesRef);
       setTempProduct(null);
       if (results.length > 0) alert(results.join(","));
@@ -164,7 +167,7 @@ function App() {
   // 登出
   const handleLogout = async () => {
     try {
-      const headers = utils.getHeadersFromCookie();
+      // const headers = utils.getHeadersFromCookie();
       const res = await apiService.axiosPostLogout("/logout", headers);
       alert(res.data.success ? res.data.message : "登出失敗");
       if (res.data.success) {
@@ -172,6 +175,7 @@ function App() {
         setProductData([]);
         setTempProduct(null);
         setSelectedRowIndex(null);
+        setHeaders(null);
       }
     } catch (error) {
       alert("error:" + error.response.data.message);
@@ -183,9 +187,9 @@ function App() {
     modalStatus("載入中", null, false);
     setSelectedRowIndex("");
     try {
-      const headers = utils.getHeadersFromCookie();
+      // const headers = utils.getHeadersFromCookie();
       await utils.getProductData(headers, setProductData, pagesRef);
-      utils.setAxiosConfigRef(axiosConfigRef,pagesRef,'current',headers);
+      utils.setAxiosConfigRef(axiosConfigRef, pagesRef, "current", headers);
       setTempProduct(null);
     } catch (error) {
       alert("error:", error);
@@ -199,18 +203,17 @@ function App() {
       alert(`已經是最後一頁`);
       return;
     }
-    const headers = utils.getHeadersFromCookie();
-    utils.setAxiosConfigRef(axiosConfigRef,pagesRef,'downPage',headers);
+    // const headers = utils.getHeadersFromCookie();
+    utils.setAxiosConfigRef(axiosConfigRef, pagesRef, "downPage", headers);
     try {
-      const res =
-        await apiService.axiosGetProductData2(
-          `/api/${APIPath}/admin/products`,
-          axiosConfigRef.current
-        );
+      const res = await apiService.axiosGetProductData2(
+        `/api/${APIPath}/admin/products`,
+        axiosConfigRef.current
+      );
       const { current_page, total_pages, category } = res.data.pagination;
       setProductData(res.data.products);
       const config = { current_page, total_pages, category };
-      utils.setPagesRef(pagesRef,config);
+      utils.setPagesRef(pagesRef, config);
     } catch (error) {
       console.error(error);
     }
@@ -220,17 +223,16 @@ function App() {
       alert(`已經是第一頁`);
       return;
     }
-    const headers = utils.getHeadersFromCookie();
-    utils.setAxiosConfigRef(axiosConfigRef,pagesRef,'upPage',headers);
+    // const headers = utils.getHeadersFromCookie();
+    utils.setAxiosConfigRef(axiosConfigRef, pagesRef, "upPage", headers);
     try {
-      const res =
-        await apiService.axiosGetProductData2(
-          `/api/${APIPath}/admin/products`,
-          axiosConfigRef.current
-        );
+      const res = await apiService.axiosGetProductData2(
+        `/api/${APIPath}/admin/products`,
+        axiosConfigRef.current
+      );
       const { current_page, total_pages, category } = res.data.pagination;
       setProductData(res.data.products);
-      utils.setPagesRef(pagesRef,{ current_page, total_pages, category });
+      utils.setPagesRef(pagesRef, { current_page, total_pages, category });
     } catch (error) {
       console.error(error);
     }
@@ -270,21 +272,20 @@ function App() {
   const onDeleteProduct = useCallback(
     async (productId) => {
       modalStatus("刪除中", null, false);
-      const headers = utils.getHeadersFromCookie();
+      // const headers = utils.getHeadersFromCookie();
       try {
         await apiService.axiosDeleteProduct(
           `/api/${APIPath}/admin/product/${productId}`,
           headers
         );
-        utils.setAxiosConfigRef(axiosConfigRef,pagesRef,'current',headers);
-        const res =
-          await apiService.axiosGetProductData2(
-            `/api/${APIPath}/admin/products`,
-            axiosConfigRef.current
-          );
+        utils.setAxiosConfigRef(axiosConfigRef, pagesRef, "current", headers);
+        const res = await apiService.axiosGetProductData2(
+          `/api/${APIPath}/admin/products`,
+          axiosConfigRef.current
+        );
         const { current_page, total_pages, category } = res.data.pagination;
         setProductData(res.data.products);
-        utils.setPagesRef(pagesRef,{ current_page, total_pages, category });
+        utils.setPagesRef(pagesRef, { current_page, total_pages, category });
         if (tempProduct?.id === productId) {
           setTempProduct(null);
         }
@@ -395,7 +396,7 @@ function App() {
   };
   const implementEditProduct = async (type, editProduct) => {
     try {
-      const headers = utils.getHeadersFromCookie();
+      // const headers = utils.getHeadersFromCookie();
       const wrapData = {
         data: {
           ...editProduct,
@@ -406,61 +407,23 @@ function App() {
       let path = "";
       let res = null;
       switch (type) {
-      case "create":
-        path = `/api/${APIPath}/admin/product`;
-        res = await apiService.axiosPostAddProduct(path, wrapData, headers);
-        break;
-      case "edit":
-        path = `/api/${APIPath}/admin/product/${editProduct.id}`;
-        res = await apiService.axiosPutProduct(path, wrapData, headers);
-        break;
-      default:
-        break;
+        case "create":
+          path = `/api/${APIPath}/admin/product`;
+          res = await apiService.axiosPostAddProduct(path, wrapData, headers);
+          break;
+        case "edit":
+          path = `/api/${APIPath}/admin/product/${editProduct.id}`;
+          res = await apiService.axiosPutProduct(path, wrapData, headers);
+          break;
+        default:
+          break;
       }
     } catch (error) {
       console.log(error);
       alert("上傳失敗");
     }
   };
-  //助教寫法 start
-  const createProduct = async () => {
-    try {
-      const headers = utils.getHeadersFromCookie();
-      const wrapData = {
-        data: {
-          ...editProduct,
-          is_enabled: editProduct.is_enabled ? 1 : 0,
-          //price,original_price在取得輸入資料時handleEditDataChange已處理過
-        },
-      };
-      let path = "";
-      // const res = null;
-      path = `/api/${APIPath}/admin/product`;
-      const res = await apiService.axiosPostAddProduct(path, wrapData, headers);
-      alert(res.data.success ? res.data.message : "create 失敗");
-    } catch (error) {
-      alert(error);
-    }
-  };
-  const updateProduct = async () => {
-    try {
-      const headers = utils.getHeadersFromCookie();
-      const wrapData = {
-        data: {
-          ...editProduct,
-          is_enabled: editProduct.is_enabled ? 1 : 0,
-          //price,original_price在取得輸入資料時handleEditDataChange已處理過
-        },
-      };
-      let path = "";
-      path = `/api/${APIPath}/admin/product/${editProduct.id}`;
-      const res = await apiService.axiosPostAddProduct(path, wrapData, headers);
-      alert(res.data.success ? res.data.message : "create 失敗");
-    } catch (error) {
-      alert(error);
-    }
-  };
-  //助教寫法 end
+
   const handleUpdateProduct = async () => {
     modalStatus(modalMode === "create" ? "新增中" : "更新中", null, false);
     if (!editProduct.id && modalMode === "edit") {
@@ -469,17 +432,16 @@ function App() {
       return;
     }
     try {
-      const headers = utils.getHeadersFromCookie();
+      // const headers = utils.getHeadersFromCookie();
       await implementEditProduct(modalMode, editProduct);
-      utils.setAxiosConfigRef(axiosConfigRef,pagesRef,'current',headers);
-      const res =
-        await apiService.axiosGetProductData2(
-          `/api/${APIPath}/admin/products`,
-          axiosConfigRef.current
-        );
+      utils.setAxiosConfigRef(axiosConfigRef, pagesRef, "current", headers);
+      const res = await apiService.axiosGetProductData2(
+        `/api/${APIPath}/admin/products`,
+        axiosConfigRef.current
+      );
       const { current_page, total_pages, category } = res.data.pagination;
       setProductData(res.data.products);
-      utils.setPagesRef(pagesRef,{ current_page, total_pages, category });
+      utils.setPagesRef(pagesRef, { current_page, total_pages, category });
       setEditProduct(tempProductDefaultValue);
       alert(modalMode === "create" ? "新增完成" : "更新完成");
     } catch (error) {
@@ -498,41 +460,48 @@ function App() {
     newImageUrl.push("");
     setEditProduct((prev) => ({ ...prev, imagesUrl: newImageUrl }));
   };
-  const handleImgsUrlChange = useCallback((e, index) => {
-    console.log(e.target);
-    const { value } = e.target;
-    const newImageUrl = [...editProduct.imagesUrl];
-    newImageUrl[index] = value;
-    setEditProduct((prev) => ({ ...prev, imagesUrl: newImageUrl }));
-  },[editProduct]);
-  const openDeleteModal = ()=>{
+  const handleImgsUrlChange = useCallback(
+    (e, index) => {
+      console.log(e.target);
+      const { value } = e.target;
+      const newImageUrl = [...editProduct.imagesUrl];
+      newImageUrl[index] = value;
+      setEditProduct((prev) => ({ ...prev, imagesUrl: newImageUrl }));
+    },
+    [editProduct]
+  );
+  const openDeleteModal = () => {
     const modalInstance = Modal.getInstance(deleteModalDivRef.current);
     modalInstance.show();
   };
-  const closeDeleteModal = ()=>{
+  const closeDeleteModal = () => {
     const modalInstance = Modal.getInstance(deleteModalDivRef.current);
     modalInstance.hide();
     setEditProduct(tempProductDefaultValue);
     setModalMode(null);
   };
-  const handleDeleteModal = useCallback((productId)=>{
-    const updatedProduct = productData.find((product) => product.id === productId) || {};
-    setEditProduct(updatedProduct);
-    openDeleteModal();
-  },[productData]);
-  const deleteProductInModal = async()=>{
+  const handleDeleteModal = useCallback(
+    (productId) => {
+      const updatedProduct =
+        productData.find((product) => product.id === productId) || {};
+      setEditProduct(updatedProduct);
+      openDeleteModal();
+    },
+    [productData]
+  );
+  const deleteProductInModal = async () => {
     modalStatus("刪除中", null, false);
-    const headers = utils.getHeadersFromCookie();
+    // const headers = utils.getHeadersFromCookie();
     try {
       await apiService.axiosDeleteProduct(
         `/api/${APIPath}/admin/product/${editProduct.id}`,
         headers
       );
-      utils.setAxiosConfigRef(axiosConfigRef,pagesRef,'current',headers);
-      const res =
-        await apiService.axiosGetProductData2(
-          `/api/${APIPath}/admin/products`,
-          axiosConfigRef.current);
+      utils.setAxiosConfigRef(axiosConfigRef, pagesRef, "current", headers);
+      const res = await apiService.axiosGetProductData2(
+        `/api/${APIPath}/admin/products`,
+        axiosConfigRef.current
+      );
       const { current_page, total_pages, category } = res.data.pagination;
       if (tempProduct.id === editProduct.id) {
         setTempProduct(null);
@@ -540,8 +509,8 @@ function App() {
       setProductData(res.data.products);
       setEditProduct(tempProductDefaultValue);
       setModalMode(null);
-      utils.setPagesRef(pagesRef,{ current_page, total_pages, category });
-      alert('刪除產品完成');
+      utils.setPagesRef(pagesRef, { current_page, total_pages, category });
+      alert("刪除產品完成");
     } catch (error) {
       console.error("刪除產品時發生錯誤：", error);
       alert("刪除產品時發生錯誤：", error);
@@ -785,7 +754,7 @@ function App() {
                 <div className="col-md-4">
                   <div className="mb-4">
                     <label htmlFor="primary-image" className="form-label">
-                        主圖
+                      主圖
                     </label>
                     <div className="input-group">
                       <input
@@ -821,7 +790,7 @@ function App() {
                           htmlFor={`imagesUrl-${index + 1}`}
                           className="form-label"
                         >
-                            副圖 {index + 1}
+                          副圖 {index + 1}
                         </label>
                         <input
                           id={`imagesUrl-${index + 1}`}
@@ -838,8 +807,10 @@ function App() {
                           placeholder={`圖片網址 ${index + 1}`}
                           className="form-control mb-2"
                           value={image}
-                          handleEditDataChange={(e) => handleImgsUrlChange(e, index)}
-                          name={`imagesUrl-${index + 1}`}                   
+                          handleEditDataChange={(e) =>
+                            handleImgsUrlChange(e, index)
+                          }
+                          name={`imagesUrl-${index + 1}`}
                         ></Input>
                         {image && (
                           <img
@@ -853,22 +824,22 @@ function App() {
                     ))}
                     <div className="btn-group w-100">
                       {editProduct.imagesUrl.length < 5 &&
-                          editProduct.imagesUrl[
-                            editProduct.imagesUrl.length - 1
-                          ] != "" && (
-                        <button
-                          className="btn btn-outline-primary btn-sm w-100"
-                          onClick={(e) => handleAddImage(e.target.value)}
-                        >
-                              新增圖片
-                        </button>
-                      )}
+                        editProduct.imagesUrl[
+                          editProduct.imagesUrl.length - 1
+                        ] != "" && (
+                          <button
+                            className="btn btn-outline-primary btn-sm w-100"
+                            onClick={(e) => handleAddImage(e.target.value)}
+                          >
+                            新增圖片
+                          </button>
+                        )}
                       {editProduct.imagesUrl.length > 1 && (
                         <button
                           className="btn btn-outline-danger btn-sm w-100"
                           onClick={(e) => handleRemoveImage(e.target.value)}
                         >
-                            取消圖片
+                          取消圖片
                         </button>
                       )}
                     </div>
@@ -878,7 +849,7 @@ function App() {
                 <div className="col-md-8">
                   <div className="mb-3">
                     <label htmlFor="title" className="form-label">
-                        標題
+                      標題
                     </label>
                     <input
                       name="title"
@@ -893,7 +864,7 @@ function App() {
 
                   <div className="mb-3">
                     <label htmlFor="category" className="form-label">
-                        分類
+                      分類
                     </label>
                     <input
                       name="category"
@@ -908,7 +879,7 @@ function App() {
 
                   <div className="mb-3">
                     <label htmlFor="unit" className="form-label">
-                        單位
+                      單位
                     </label>
                     <input
                       name="unit"
@@ -924,7 +895,7 @@ function App() {
                   <div className="row g-3 mb-3">
                     <div className="col-6">
                       <label htmlFor="origin_price" className="form-label">
-                          原價
+                        原價
                       </label>
                       <input
                         name="origin_price"
@@ -939,7 +910,7 @@ function App() {
                     </div>
                     <div className="col-6">
                       <label htmlFor="price" className="form-label">
-                          售價
+                        售價
                       </label>
                       <input
                         name="price"
@@ -956,7 +927,7 @@ function App() {
 
                   <div className="mb-3">
                     <label htmlFor="description" className="form-label">
-                        產品描述
+                      產品描述
                     </label>
                     <textarea
                       name="description"
@@ -971,7 +942,7 @@ function App() {
 
                   <div className="mb-3">
                     <label htmlFor="content" className="form-label">
-                        說明內容
+                      說明內容
                     </label>
                     <textarea
                       name="content"
@@ -994,7 +965,7 @@ function App() {
                       onChange={handleEditDataChange}
                     />
                     <label className="form-check-label" htmlFor="isEnabled">
-                        是否啟用
+                      是否啟用
                     </label>
                   </div>
                 </div>
@@ -1008,14 +979,14 @@ function App() {
                 aria-label="Close"
                 onClick={closeEditModal}
               >
-                  取消
+                取消
               </button>
               <button
                 type="button"
                 className="btn btn-primary"
                 onClick={handleUpdateProduct}
               >
-                  確認
+                確認
               </button>
             </div>
           </div>
@@ -1029,7 +1000,7 @@ function App() {
         style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         ref={deleteModalDivRef}
       >
-        <div className="modal-dialog" >
+        <div className="modal-dialog">
           <div className="modal-content">
             <div className="modal-header">
               <h1 className="modal-title fs-5">刪除產品</h1>
@@ -1041,7 +1012,7 @@ function App() {
               ></button>
             </div>
             <div className="modal-body">
-              你是否要刪除 
+              你是否要刪除
               <span className="text-danger fw-bold">{editProduct.title}</span>
             </div>
             <div className="modal-footer">
@@ -1052,7 +1023,11 @@ function App() {
               >
                 取消
               </button>
-              <button type="button" className="btn btn-danger" onClick={deleteProductInModal}>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={deleteProductInModal}
+              >
                 刪除
               </button>
             </div>
