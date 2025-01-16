@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useEffect, useState, useRef, memo } from "react";
+import React, { memo } from "react";
 // import Modal from "./Modal";
 
 const Product = (props) => {
@@ -14,6 +14,7 @@ const Product = (props) => {
     onDeleteProduct,
     isSelected,
     handleOpenEditModalWithValue,
+    handleDeleteModal
   } = props;
   const atGetProduct = () => {
     onGetProduct(id);
@@ -23,6 +24,9 @@ const Product = (props) => {
   };
   const atOpenEditMOdal = () => {
     handleOpenEditModalWithValue("edit", id);
+  };
+  const atOpenDeleteModal = () => {
+    handleDeleteModal(id);
   };
   return (
     <>
@@ -68,7 +72,7 @@ const Product = (props) => {
               <button
                 type="button"
                 className="btn btn-outline-danger btn-sm"
-                onClick={atDeleteProduct}
+                onClick={atOpenDeleteModal}
               >
                 刪除
               </button>

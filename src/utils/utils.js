@@ -93,3 +93,51 @@ export async function AddProductsSequentially(productData) {
     } 
   } return results; 
 }
+
+export const setAxiosConfigRef = (axiosConfigRef,pagesRef,type,headers)=>{
+  switch (type) {
+  case 'current':
+    axiosConfigRef.current = {
+      params: {
+        page: pagesRef.current.current_page,
+        category: pagesRef.current.category,
+      },
+      headers: headers,
+    };
+    break;
+  case 'downPage':
+    axiosConfigRef.current = {
+      params: {
+        page:
+            pagesRef.current.current_page < pagesRef.current.total_pages
+              ? pagesRef.current.current_page + 1
+              : pagesRef.current.total_pages,
+        category: pagesRef.category || "",
+      },
+      headers: headers, // 替換 headers
+    };
+    break;
+  case 'upPage':
+    axiosConfigRef.current = {
+      params: {
+        page: pagesRef.current.current_page - 1,
+        category: pagesRef.category || "",
+      },
+      headers: headers, // 替換 headers
+    };
+    break;
+  default:
+    axiosConfigRef.current = {
+      params: { page: 0, category: "" },
+      headers: { Authorization: "" },
+    };
+    break;
+  }
+};
+export const setPagesRef = (pagesRef,config)=>{
+  pagesRef.current = {
+    current_page: config.current_page || 0,
+    total_pages: config.total_pages || 0,
+    category: config.category || "",
+  };
+};
