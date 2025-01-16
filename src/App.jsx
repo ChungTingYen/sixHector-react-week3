@@ -5,6 +5,7 @@ import {
   Products,
   ProductDetail,
   ProductDetailModal,
+  Input
   // ProductEditModal,
 } from "./component";
 // import { productDataAtLocal } from "./productDataAtLocal";
@@ -797,6 +798,14 @@ function App() {
                         value={editProduct.imageUrl}
                         onChange={handleEditDataChange}
                       />
+                      {/* <Input 
+                        handleEditDataChange={handleEditDataChange}
+                        name="imageUrl"
+                        type="text"
+                        id="primary-image"
+                        className="form-control"
+                        placeholder="請輸入圖片連結"
+                        value={editProduct.imageUrl} /> */}
                     </div>
                     <img
                       src={editProduct.imageUrl}
