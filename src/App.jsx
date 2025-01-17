@@ -12,22 +12,22 @@ import {
 import { productDataAtLocal } from "./products";
 import * as utils from "./utils/utils";
 import { Modal } from "bootstrap";
+//先給初始值，以免出現controll 跟 uncontroll的狀況
+const tempProductDefaultValue = {
+  imageUrl: "",
+  title: "",
+  category: "",
+  unit: "",
+  origin_price: 0,
+  price: 0,
+  description: "",
+  content: "",
+  is_enabled: false,
+  imagesUrl: [""],
+};
 function App() {
   const [productData, setProductData] = useState([]);
   const [headers, setHeaders] = useState(null);
-  //先給初始值，以免出現controll 跟 uncontroll的狀況
-  const tempProductDefaultValue = {
-    imageUrl: "",
-    title: "",
-    category: "",
-    unit: "",
-    origin_price: 0,
-    price: 0,
-    description: "",
-    content: "",
-    is_enabled: false,
-    imagesUrl: [""],
-  };
   const [tempProduct, setTempProduct] = useState(null);
   const [editProduct, setEditProduct] = useState(tempProductDefaultValue);
   const [account, setAccount] = useState({
@@ -67,7 +67,7 @@ function App() {
     });
   };
   useEffect(() => {
-    console.log("headers:", headers);
+    // console.log("headers:", headers);
   });
   //登入
   const handleLogin = async (e) => {
@@ -347,9 +347,6 @@ function App() {
       new Modal(deleteModalDivRef.current, { backdrop: false });
     }
   }, []);
-  // useEffect(()=>{
-  //   console.log('setEditProduct=',editProduct);
-  // },[editProduct]);
   const [modalMode, setModalMode] = useState(null);
   const handleEditDataChange = (e) => {
     const { name, type, value, checked } = e.target;
@@ -396,7 +393,6 @@ function App() {
   };
   const implementEditProduct = async (type, editProduct) => {
     try {
-      // const headers = utils.getHeadersFromCookie();
       const wrapData = {
         data: {
           ...editProduct,
@@ -407,20 +403,22 @@ function App() {
       let path = "";
       let res = null;
       switch (type) {
-        case "create":
-          path = `/api/${APIPath}/admin/product`;
-          res = await apiService.axiosPostAddProduct(path, wrapData, headers);
-          break;
-        case "edit":
-          path = `/api/${APIPath}/admin/product/${editProduct.id}`;
-          res = await apiService.axiosPutProduct(path, wrapData, headers);
-          break;
-        default:
-          break;
+      case "create":
+        path = `/api/${APIPath}/admin/product`;
+        res = await apiService.axiosPostAddProduct(path, wrapData, headers);
+        break;
+      case "edit":
+        path = `/api/${APIPath}/admin/product/${editProduct.id}`;
+        res = await apiService.axiosPutProduct(path, wrapData, headers);
+        break;
+      default:
+        break;
       }
+      return true;
     } catch (error) {
       console.log(error);
       alert("上傳失敗");
+      return false;
     }
   };
 
@@ -433,19 +431,25 @@ function App() {
     }
     try {
       // const headers = utils.getHeadersFromCookie();
-      await implementEditProduct(modalMode, editProduct);
-      utils.setAxiosConfigRef(axiosConfigRef, pagesRef, "current", headers);
-      const res = await apiService.axiosGetProductData2(
-        `/api/${APIPath}/admin/products`,
-        axiosConfigRef.current
-      );
-      const { current_page, total_pages, category } = res.data.pagination;
-      setProductData(res.data.products);
-      utils.setPagesRef(pagesRef, { current_page, total_pages, category });
-      setEditProduct(tempProductDefaultValue);
-      alert(modalMode === "create" ? "新增完成" : "更新完成");
+      const result = await implementEditProduct(modalMode, editProduct);
+      if(result){
+        utils.setAxiosConfigRef(axiosConfigRef, pagesRef, "current", headers);
+        const res = await apiService.axiosGetProductData2(
+          `/api/${APIPath}/admin/products`,
+          axiosConfigRef.current
+        );
+        const { current_page, total_pages, category } = res.data.pagination;
+        setProductData(res.data.products);
+        utils.setPagesRef(pagesRef, { current_page, total_pages, category });
+        setEditProduct(tempProductDefaultValue);
+        if(res.data.success)
+          alert(modalMode === "create" ? "新增完成" : "更新完成");
+      } 
+      // else{
+      //   alert('上傳失敗');
+      // }
     } catch (error) {
-      alert(modalMode === "create" ? "新增失敗:" : "更新失敗:" + error);
+      alert(modalMode === "create" ? "新增完成，下載產品失敗:" + error : "更新失敗，下載產品失敗:" + error);
     }
     AppModalRef.current.close();
     closeEditModal();
@@ -503,7 +507,7 @@ function App() {
         axiosConfigRef.current
       );
       const { current_page, total_pages, category } = res.data.pagination;
-      if (tempProduct.id === editProduct.id) {
+      if (tempProduct?.id === editProduct.id) {
         setTempProduct(null);
       }
       setProductData(res.data.products);
@@ -626,7 +630,6 @@ function App() {
               <div className="row mt-1 mb-1 mx-1">
                 <div className="col-md-6 mb-1 mr-3">
                   <h3>產品列表</h3>
-                  {/* <p onClick={ShowNextPage}>第二頁</p> */}
                   <table className="table">
                     <thead>
                       <tr>
@@ -804,7 +807,7 @@ function App() {
                         <Input
                           id={`imagesUrl-${index + 1}`}
                           type="text"
-                          placeholder={`圖片網址 ${index + 1}`}
+                          placeholder={`圖片編號 ${index + 1}`}
                           className="form-control mb-2"
                           value={image}
                           handleEditDataChange={(e) =>
@@ -827,13 +830,13 @@ function App() {
                         editProduct.imagesUrl[
                           editProduct.imagesUrl.length - 1
                         ] != "" && (
-                          <button
-                            className="btn btn-outline-primary btn-sm w-100"
-                            onClick={(e) => handleAddImage(e.target.value)}
-                          >
+                        <button
+                          className="btn btn-outline-primary btn-sm w-100"
+                          onClick={(e) => handleAddImage(e.target.value)}
+                        >
                             新增圖片
-                          </button>
-                        )}
+                        </button>
+                      )}
                       {editProduct.imagesUrl.length > 1 && (
                         <button
                           className="btn btn-outline-danger btn-sm w-100"

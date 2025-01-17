@@ -35,24 +35,6 @@ export const getProductData = async (headers,setProductData,pagesRef)=>{
     console.log(error);
   }
 };
-// export const getProductData = async (token,headers,setProductData)=>{
-//   if(token){
-//     headers = {
-//       Authorization: token,
-//     };
-//   }
-//   try {
-//     // axios.defaults.headers.common.Authorization = token;
-//     const resProduct = await apiService.axiosGetProductData(
-//       `/api/${APIPath}/admin/products`,
-//       headers
-//     ) || [];
-//     setProductData(resProduct.data.products);
-//   } catch (error) {
-//     alert(error.response.data.message);
-//     console.log(error);
-//   }
-// };
 
 export async function deleteProductsSequentially(productData) { 
   const results = []; 
