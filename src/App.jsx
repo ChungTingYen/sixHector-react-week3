@@ -6,25 +6,14 @@ import {
   ProductDetail,
   ProductDetailModal,
   Input,
-  // ProductEditModal,
 } from "./component";
 // import { productDataAtLocal } from "./productDataAtLocal";
 import { productDataAtLocal } from "./products";
+import { tempProductDefaultValue } from './defaultValue';
 import * as utils from "./utils/utils";
 import { Modal } from "bootstrap";
 //先給初始值，以免出現controll 跟 uncontroll的狀況
-const tempProductDefaultValue = {
-  imageUrl: "",
-  title: "",
-  category: "",
-  unit: "",
-  origin_price: 0,
-  price: 0,
-  description: "",
-  content: "",
-  is_enabled: false,
-  imagesUrl: [""],
-};
+
 function App() {
   const [productData, setProductData] = useState([]);
   const [headers, setHeaders] = useState(null);
@@ -66,9 +55,6 @@ function App() {
       [e.target.name]: e.target.value,
     });
   };
-  useEffect(() => {
-    // console.log("headers:", headers);
-  });
   //登入
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -212,6 +198,8 @@ function App() {
       );
       const { current_page, total_pages, category } = res.data.pagination;
       setProductData(res.data.products);
+      setTempProduct(null);
+      setSelectedRowIndex(null);
       const config = { current_page, total_pages, category };
       utils.setPagesRef(pagesRef, config);
     } catch (error) {
@@ -232,6 +220,8 @@ function App() {
       );
       const { current_page, total_pages, category } = res.data.pagination;
       setProductData(res.data.products);
+      setTempProduct(null);
+      setSelectedRowIndex(null);
       utils.setPagesRef(pagesRef, { current_page, total_pages, category });
     } catch (error) {
       console.error(error);
@@ -256,7 +246,7 @@ function App() {
         return;
       }
       const filterProduct =
-        productData.filter((product) => product.id === productId)[0] || [];
+        productData.find((product) => product.id === productId) || [];
       setTempProduct(filterProduct);
       setSelectedRowIndex(filterProduct.id);
       //測試用Modal，點擊會出現Modal顯示載入中
